@@ -12,16 +12,16 @@ HOLE_AREA_THRESHOLD = 10000
 
 
 # 调用pershombox计算形状的PD
-def calculate_dgms_of_shape(bin_img, key, save_path, type, orientation_num=30):
+def calculate_dgms_of_shape(bin_img, name, save_path, orientation_num=30):
     leaf_dgms = calculate_discrete_NPHT_2d(bin_img, orientation_num)
     dgms = []
     for index, dgm in enumerate(leaf_dgms):
         dgm_arr = np.array(dgm[0])
         dgms.append(dgm_arr)
         # print("dgm shape is: {}".format(dgm_arr.shape))
-        file_name = "{}_{}_{}_pd.txt".format(key, type, index)
+        file_name = "{}_{}.txt".format(name, index)
         np.savetxt(os.path.joint(save_path, file_name), dgm_arr)
-    return dgms
+    #return dgms
 
 
 # 填充叶子上的孔洞
@@ -52,6 +52,6 @@ def img_preprocess(gray_img):
     return mask
 
 
-def compute_shape_pd(mask, key, save_path, type):
-    dgms = calculate_dgms_of_shape(mask, key, save_path, type)
-    return dgms
+def compute_shape_pd(mask, name, save_path):
+    dgms = calculate_dgms_of_shape(mask, name, save_path)
+    #return dgms

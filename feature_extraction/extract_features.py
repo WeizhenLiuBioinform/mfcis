@@ -46,33 +46,30 @@ def get_persistence(pd, N):
         return index
 
 
-def compute_pds(imgs, isVenation=False, remove_background=False):
+def compute_pds(img, name, config, cultivar, period, isVenation=False):
     texture_pd = None
     vein_pd = None
     shape_pd = None
-    for key in imgs.keys():
-        gray = rgb2gray(imgs[key])
-        img2 = cv2.cvtColor(imgs[key], cv2.COLOR_BGR2HSV)
-        if remove_background:
-            S = img2[:, :, 1]
-            re, m = cv2.threshold(S, 10, 120, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
-            mask = S < re
-            mask = remove_small_holes(mask, 1000)
-            mask = remove_small_objects(mask, 1000)
-            mask = ~mask
-        else:
-            mask = gray > 0
-            mask = remove_small_holes(mask, 1000)
-            mask = remove_small_objects(mask, 1000)
+    gray = rgb2gray(img)
+    mask = gray > 0
+    mask = remove_small_holes(mask, 1000)
+    mask = remove_small_objects(mask, 1000)
+    gray = mask.astype(int) * gray
+    # gray = rescale(gray, 0.5)
+    # mask = rescale(mask, 0.5)
+    texture_pd_path = os.path.join(config['texture_data_path'], cultivar, period)
+    if not os.path.exists(texture_pd_path):
+        os.mkdir(texture_pd_path)
 
-        gray = mask.astype(int) * gray
-        # gray = rescale(gray, 0.5)
-        # mask = rescale(mask, 0.5)
-        texture_pd_path = ""
-        texture_pd = compute_texture_pd(gray, save_path=texture_pd_path)
-        if isVenation:
-            vein_pd_path = ""
-            dt, vein_pd = compute_venation_pd(gray, save_path=vein_pd_path)
-        shape_pd_path = ""
-        shape_pd = compute_shape_pd(mask=mask, key=key, save_path=shape_pd_path, type="shape")
+    texture_pd = compute_texture_pd(gray, name=name, save_path=texture_pd_path)
+    if isVenation:
+        vein_pd_path = os.path.join(config['vein_data_path'], cultivar, period)
+        if not os.path.exists(vein_pd_path):
+            os.mkdir(vein_pd_path)
+        dt, vein_pd = compute_venation_pd(gray, name=name, save_path=vein_pd_path)
+
+    shape_pd_path = os.path.join(config['shape_data_path'], cultivar, period)
+    if not os.path.exists(shape_pd_path):
+        os.mkdir(shape_pd_path)
+    shape_pd = compute_shape_pd(mask=mask, name=name, save_path=shape_pd_path)
     return texture_pd, shape_pd, vein_pd

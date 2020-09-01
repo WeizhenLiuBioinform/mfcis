@@ -51,7 +51,8 @@ configs['soybean_model'] = {
 
     "N": [int(d) for d in point_number_list],
     "classes": 100,
-    "image_size": (256, 256)
+    "image_size": (256, 256),
+    "regx_str": r'\S{1,}_t'
 }
 
 configs['cherry_model'] = {
@@ -75,7 +76,8 @@ configs['cherry_model'] = {
 
     "N": [int(d) for d in point_number_list],
     "classes": 100,
-    "image_size": (256, 256)
+    "image_size": (256, 256),
+    "regx_str": r'\S{1,}_d'
 }
 
 configs['swedish_model'] = {
@@ -92,7 +94,8 @@ configs['swedish_model'] = {
     "pht_threshold_texture": 0.0001,
     "N": [int(d) for d in point_number_list],
     "classes": 15,
-    "image_size": (256, 256)
+    "image_size": (256, 256),
+    "regx_str": r'l\d{1,}\S{1,}\d{1,3}'
 }
 
 configs['flavia_model'] = {
@@ -109,5 +112,6 @@ configs['flavia_model'] = {
     "pht_threshold_texture": 0.0001,
     "N": [int(d) for d in point_number_list],
     "classes": 32,
-    "image_size": (256, 192)
+    "image_size": (256, 192),
+    "regx_str":r'\d{4,}'
 }

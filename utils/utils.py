@@ -105,6 +105,44 @@ def get_dataset_file_list(img_path):
     return x_list, y_list
 
 
+def get_dataset_file_list_soybean(img_path, period):
+    dirs = os.listdir(img_path)
+    x_list = []
+    y_list = []
+    for d in dirs:
+        cultivar = int(d)
+        parent_path = os.path.join(img_path, d, period)
+        files = os.listdir(parent_path)
+        for f in files:
+            f_path = os.path.join(parent_path, f)
+            x_list.append(f_path)
+            y_list.append(cultivar)
+    return x_list, y_list
 
 
+def create_dirs(config, cultivar, period, isVenation=False):
+    if not os.path.exists(config['img_path']):
+        os.mkdir(config['img_path'])
+    if not os.path.exists(config['shape_data_path']):
+        os.mkdir(config['shape_data_path'])
+    if not os.path.exists(config['texture_data_path']):
+        os.mkdir(config['texture_data_path'])
+    if isVenation:
+        if not os.path.exists(config['vein_data_path']):
+            os.mkdir(config['vein_data_path'])
+    types = ['img_path', 'texture_data_path', 'shape_data_path']
+    if isVenation:
+        types.append('vein_data_path')
+
+    for type in types:
+        base_path = config[type]
+        if not os.path.exists(base_path):
+            os.mkdir(base_path)
+        sec_path = os.path.join(base_path, cultivar)
+        if not os.path.exists(sec_path):
+            os.mkdir(sec_path)
+        if period:
+            third_path = os.path.join(sec_path, period)
+            if not os.path.exists(third_path):
+                os.mkdir(third_path)
 

@@ -1,7 +1,7 @@
 from config.model_configuration import *
 from models import BaseModel
 from utils import utils
-
+from feature_extraction import extract_features
 from keras.utils import to_categorical
 from keras import backend as K
 from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, LearningRateScheduler
@@ -9,9 +9,11 @@ from sklearn.metrics import precision_score, accuracy_score, f1_score, recall_sc
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from sklearn.utils import class_weight
-
+import re
 import json
 import os
+from multiprocessing import Pool
+from skimage import io as skio
 
 iteration = 1
 
@@ -372,6 +374,53 @@ def mixing_all_period_xception(config):
     xception_model_training_and_test(img_x_list=img_x_list, y_list=y_list)
 
 
+def feature_extraction(dataset, period, config, isVenation=False):
+    utils.create_dirs(config, period, isVenation=False)
+    img_path = config['img_path']
+    task_list = []
+    cultivars = os.listdir(img_path)
+    if dataset == 'soybean':
+        soybean_regx = re.compile(config['regx_str'])
+        for cultivar in cultivars:
+            files = os.listdir(os.path.join(img_path, cultivar, period))
+            for f in files:
+                f_name = soybean_regx.findall(f)[0]
+                task = (os.path.join(img_path, cultivar, period, f), f_name, config, cultivar, period, isVenation)
+                task_list.append(task)
+    else:
+        regx = re.compile(configs['regx_str'])
+        for cultivar in cultivars:
+            files = os.listdir(os.path.join(img_path, cultivar))
+            for f in files:
+                f_name = regx.findall(f)[0]
+                task = (os.path.join(img_path, cultivar, f), f_name, config, cultivar, period, isVenation)
+                task_list.append(task)
+
+    p = 20
+    pool = Pool(p)
+    task_size = len(task_list)
+    delta = task_size // p
+    for i in range(p):
+        tmp_list = []
+        if (i+1) * delta < task_size:
+            tmp_list = task_list[i*delta:(i+1)*delta]
+        else:
+            tmp_list = task_list[i*delta:]
+
+        pool.apply_async(extract_feature_bat, args=(tmp_list))
+
+
+def extract_feature_bat(task_list):
+    for task in task_list:
+        img = skio.imread(task[0])
+        try:
+            extract_features.compute_pds(img, name=task[1], config=task[2], cultivar=task[3], period=task[4], isVenation=task[5])
+        except Exception as e:
+            print(e)
+            continue
+            print(task)
+
+
 if __name__ == "__main__":
     '''
     Xception Model and TP+Xception Model evaluation
@@ -385,6 +434,22 @@ if __name__ == "__main__":
         #####      Please read the readme.md file first!!!                     ######
         #############################################################################
     '''
+    # -- Topological Feature Extraction -- #
+    # This process is time consuming,so we dump pd as txt files, please ensure there enough disk space to store them.
+    # The feature extraction process may take a long time, we recommend you run the code on a multi-core computer,
+    # we set the process default process number to 20,
+    # you can modify it in the 'feature_extraction' function in this file.
+
+    feature_extraction(dataset='soybean', period='R1', config=configs['soybean_model'], isVenation=True)
+    feature_extraction(dataset='soybean', period='R3', config=configs['soybean_model'], isVenation=True)
+    feature_extraction(dataset='soybean', period='R4', config=configs['soybean_model'], isVenation=True)
+    feature_extraction(dataset='soybean', period='R5', config=configs['soybean_model'], isVenation=True)
+    feature_extraction(dataset='soybean', period='R6', config=configs['soybean_model'], isVenation=True)
+
+    feature_extraction(dataset='cherry', period=None, config=configs['flavia_model'], isVenation=False)
+    feature_extraction(dataset='swedish', period=None, config=configs['swedish_model'], isVenation=False)
+    feature_extraction(dataset='flavia', period=None, config=configs['flavia_model'], isVenation=False)
+
 
     # -- Xception Model --
     # evaluate the xception model on swedish dataset
