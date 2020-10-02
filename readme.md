@@ -16,11 +16,11 @@
  
 #### The configuration of Homcloud and Dipha 
 > we refer to the homepage of Homcloud https://www.wpi-aimr.tohoku.ac.jp/hiraoka_labo/homcloud/index.en.html for the configuration of Homcloud and Dipha.
-### Docker Image
-It's so cumbersome to do the configuration from scratch, so we provided a docker image, you can run the program in the docker container.
-The docker image can be found in the docker_images folder. We strongly recommend you adopt this way.
+### DockerFile
+It's so cumbersome to do the configuration from scratch, so we provided a dockerfile, you can run the program in the docker container.
+The dockerfile and homcloud package can be found in the dockerfile folder. We strongly recommend you adopt this way. The dipha provided was compiled on Debian system. If you want to change the base image, the dipha should be Recompiled.
 
 ### The configuration of the code
 > - You should configuration the *_dipha_* path in 
   pershombox/_software_backends/software_backends.cfg
-> - The main.py is the entrance of the program, you can 
+> - The main.py is the entrance of the program, you can uncomment or comment the code to validate different models.
