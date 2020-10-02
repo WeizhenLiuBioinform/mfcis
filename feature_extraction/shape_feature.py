@@ -20,7 +20,7 @@ def calculate_dgms_of_shape(bin_img, name, save_path, orientation_num=30):
         dgms.append(dgm_arr)
         # print("dgm shape is: {}".format(dgm_arr.shape))
         file_name = "{}_{}.txt".format(name, index)
-        np.savetxt(os.path.joint(save_path, file_name), dgm_arr)
+        np.savetxt(os.path.join(save_path, file_name), dgm_arr)
     #return dgms
 
 

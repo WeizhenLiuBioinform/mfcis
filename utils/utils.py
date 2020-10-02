@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from tqdm import *
+# from tqdm import *
 import re
 from skimage import io as skio
 from skimage.transform import resize
@@ -15,7 +15,7 @@ def data_loader_for_combined_model(file_list, dataset, config, isVenation):
     y = []
     regx_str = config['regx_str']
     regx = re.compile(regx_str)
-    for path in tqdm(file_list):
+    for path in file_list:
         path = path[:-1]
         strs = str.split(path, '/')
         f_name = regx.findall(strs[-1])[0]
@@ -76,10 +76,13 @@ def data_loader_for_combined_model(file_list, dataset, config, isVenation):
 def data_loader_for_xception_model(file_list, config):
     img_x = []
     y = []
-    for path in tqdm(file_list):
-        path = path[:-1]
+    for path in file_list:
+        path = path
         strs = str.split(path, '/')
-        d = strs[-2][2:]
+        if strs[-2].startswith("yd"):
+            d = strs[-2][2:]
+        else:
+            d = strs[-2]
         img_f_path = os.path.join(path)
         img = skio.imread(img_f_path)
         img = resize(img, [config['image_size'][0], config['image_size'][1], 3])
@@ -95,7 +98,10 @@ def get_dataset_file_list(img_path):
     x_list = []
     y_list = []
     for d in dirs:
-        cultivar= int(d)
+        if d.startswith("yd"):
+            cultivar = int(d[2:])
+        else:
+            cultivar= int(d)
         parent_path = os.path.join(img_path, d)
         files = os.listdir(parent_path)
         for f in files:
@@ -120,7 +126,7 @@ def get_dataset_file_list_soybean(img_path, period):
     return x_list, y_list
 
 
-def create_dirs(config, cultivar, period, isVenation=False):
+def create_dirs(config, cultivar=None, period=None, isVenation=False):
     if not os.path.exists(config['img_path']):
         os.mkdir(config['img_path'])
     if not os.path.exists(config['shape_data_path']):

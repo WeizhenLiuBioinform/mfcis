@@ -22,7 +22,7 @@ def background_padding(img, size):
     padding_right = dest_size - padding_left - w
     padding_top = (dest_size - h) // 2
     padding_bottom = dest_size - padding_top - h
-    img = np.pad(img, (padding_top, padding_bottom), (padding_left, padding_right),'constant', constant_values=0)
+    img = np.pad(img, (padding_top, padding_bottom), (padding_left, padding_right), 'constant', constant_values=0)
     return img
 
 

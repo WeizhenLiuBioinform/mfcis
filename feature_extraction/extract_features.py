@@ -57,7 +57,10 @@ def compute_pds(img, name, config, cultivar, period, isVenation=False):
     gray = mask.astype(int) * gray
     # gray = rescale(gray, 0.5)
     # mask = rescale(mask, 0.5)
-    texture_pd_path = os.path.join(config['texture_data_path'], cultivar, period)
+    if period:
+        texture_pd_path = os.path.join(config['texture_data_path'], cultivar, period)
+    else:
+        texture_pd_path = os.path.join(config['texture_data_path'], cultivar)
     if not os.path.exists(texture_pd_path):
         os.mkdir(texture_pd_path)
 
@@ -67,8 +70,10 @@ def compute_pds(img, name, config, cultivar, period, isVenation=False):
         if not os.path.exists(vein_pd_path):
             os.mkdir(vein_pd_path)
         dt, vein_pd = compute_venation_pd(gray, name=name, save_path=vein_pd_path)
-
-    shape_pd_path = os.path.join(config['shape_data_path'], cultivar, period)
+    if period:
+        shape_pd_path = os.path.join(config['shape_data_path'], cultivar, period)
+    else:
+        shape_pd_path = os.path.join(config['shape_data_path'], cultivar)
     if not os.path.exists(shape_pd_path):
         os.mkdir(shape_pd_path)
     shape_pd = compute_shape_pd(mask=mask, name=name, save_path=shape_pd_path)

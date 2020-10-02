@@ -4,11 +4,14 @@ import numpy as np
 
 
 def compute_texture_pd(pict, name, save_path, paralles=2):
-    pd = hc.PDList.from_bitmap_levelset(pict, "sublevel", "bitmap", parallels=2)
-    dest_pd0_path = os.path.join(save_path, name, '_texture_pd0.txt')
-    dest_pd1_path = os.path.join(save_path, name, '_texture_pd1.txt')
-    dump_pd_as_txt(pd, dest_pd0_path, dest_pd1_path)
-    return pd
+    dest_pd0_path = os.path.join(save_path, name+'_texture_pd0.txt')
+    dest_pd1_path = os.path.join(save_path, name+'_texture_pd1.txt')
+    if os.path.exists(dest_pd1_path) and os.path.exists(dest_pd1_path):
+        return None
+    else:
+        pd = hc.PDList.from_bitmap_levelset(pict, "sublevel", "bitmap", parallels=2)
+        dump_pd_as_txt(pd, dest_pd0_path, dest_pd1_path)
+        return pd
 
 
 def dump_pd_as_txt(pd, dest_pd0_path, dest_pd1_path):

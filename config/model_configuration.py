@@ -15,7 +15,7 @@ shape_point_num = 700
 texture_and_vein_point_num = 1000
 
 point_number_list = list(np.zeros(shape_views) + shape_point_num)
-point_number_list.append(list(np.zeros(texture_views+vein_views) + texture_and_vein_point_num))
+point_number_list.extend(list(np.zeros(texture_views+vein_views) + texture_and_vein_point_num))
 
 sequence = []
 sequence.append(shape_views - 1)
@@ -31,10 +31,10 @@ print(view_combination)
 
 
 configs['soybean_model'] = {
-    "texture_data_path": r'/home/zyp/pda-docker-data/final_experiment/dataset_for_slayer/texture-pdm/texture',
-    "vein_data_path": r"/home/zyp/pda-docker-data/final_experiment/dataset_for_slayer/vein-pdm/vein",
-    "shape_data_path": r"/home/zyp/pda-docker-data/final_experiment/dataset_for_slayer/contour_pdm/contour",
-    "img_path": r"/home/zyp/cultivar100_rgb_img/soybean_cultivar100_img",
+    "texture_data_path": r'/mfcis/dataset/soybean/soybean-dataset-texture-txt',
+    "vein_data_path": r"/mfcis/dataset/soybean/soybean-dataset-vein-txt",
+    "shape_data_path": r"/mfcis/dataset/soybean/soybean-dataset-contour-pdm",
+    "img_path": r"/mfcis/dataset/soybean/soybean_cultivar100_img",
     "views": 34,
     "shape_views": shape_views,
     "texture_views": texture_views,
@@ -81,9 +81,9 @@ configs['cherry_model'] = {
 }
 
 configs['swedish_model'] = {
-    "texture_data_path": r"/home/zyp/public_dataset/swedish-dataset/swedish-dataset-texture-txt",
-    "shape_data_path": r"/home/zyp/public_dataset/swedish-dataset/swedish-dataset-contour-pdm",
-    "img_path":r"/home/zyp/public_dataset/swedish-dataset/swedish-dataset-square-256",
+    "texture_data_path": r"/mfcis/dataset/swedish/swedish-dataset-texture-txt",
+    "shape_data_path": r"/mfcis/dataset/swedish/swedish-dataset-contour-pdm",
+    "img_path": r"/mfcis/dataset/swedish/swedish-dataset-png",
     "views": 32,
     "shape_views": shape_views,
     "texture_views": 2,

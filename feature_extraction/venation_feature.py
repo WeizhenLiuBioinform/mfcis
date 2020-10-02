@@ -14,8 +14,8 @@ def compute_binary_pd(venation, name, save_path):
     mask = remove_small_holes(venation, BINARY_SMALL_HOLES_SIZE)
     dt = mask.astype(int) * dt
     pd = hc.PDList.from_bitmap_levelset(dt, mode='sublevel', type='bitmap')
-    dest_pd0_path = os.path.join(save_path, name, '_vein_pd0.txt')
-    dest_pd1_path = os.path.join(save_path, name, '_vein_pd1.txt')
+    dest_pd0_path = os.path.join(save_path, name+'_vein_pd0.txt')
+    dest_pd1_path = os.path.join(save_path, name+'_vein_pd1.txt')
     dump_pd_as_txt(pd, dest_pd0_path, dest_pd1_path)
     return dt, pd
 

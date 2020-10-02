@@ -22,12 +22,19 @@ def xception(dataset, config, period='N'):
     # config = configs[dataset+"_model"]
     x_list, y_list = utils.get_dataset_file_list(config['img_path'])
     img_x_list, y_list = utils.data_loader_for_xception_model(file_list=x_list, config=config)
-    xception_model_training_and_test(img_x_list=img_x_list, y_list=y_list)
+    xception_model_training_and_test(img_x_list=img_x_list, y_list=y_list, config=config)
 
 
 def xception_model_training_and_test(img_x_list, y_list, config):
     x = np.array(img_x_list)
     y = np.array(y_list)
+    dataset = config['dataset']
+    id_map = np.loadtxt(dataset+'_id.txt')
+    for index, d in enumerate(y):
+        for label in id_map:
+            if d == label[0]:
+                y[index] = label[1]
+
     y_one_hot = to_categorical(y)
 
     lr_adjust = ReduceLROnPlateau(monitor='val_loss',
@@ -57,7 +64,7 @@ def xception_model_training_and_test(img_x_list, y_list, config):
                                            monitor='val_loss', verbose=1, save_best_only=True, mode='auto',
                                            save_weights_only=True)
 
-        model = BaseModel.Xception_Model(parallels=4, config=config)
+        model = BaseModel.Xception_Model(parallels=0, config=config)
         model.fit(X_train, y_train, batch_size=100, epochs=100, validation_split=0.1,
                   callbacks=[lr_adjust, save_bset_weight])
         K.clear_session()
@@ -375,7 +382,7 @@ def mixing_all_period_xception(config):
 
 
 def feature_extraction(dataset, period, config, isVenation=False):
-    utils.create_dirs(config, period, isVenation=False)
+    #utils.create_dirs(config, period, isVenation=False)
     img_path = config['img_path']
     task_list = []
     cultivars = os.listdir(img_path)
@@ -388,7 +395,7 @@ def feature_extraction(dataset, period, config, isVenation=False):
                 task = (os.path.join(img_path, cultivar, period, f), f_name, config, cultivar, period, isVenation)
                 task_list.append(task)
     else:
-        regx = re.compile(configs['regx_str'])
+        regx = re.compile(config['regx_str'])
         for cultivar in cultivars:
             files = os.listdir(os.path.join(img_path, cultivar))
             for f in files:
@@ -396,18 +403,21 @@ def feature_extraction(dataset, period, config, isVenation=False):
                 task = (os.path.join(img_path, cultivar, f), f_name, config, cultivar, period, isVenation)
                 task_list.append(task)
 
-    p = 20
-    pool = Pool(p)
-    task_size = len(task_list)
-    delta = task_size // p
-    for i in range(p):
-        tmp_list = []
-        if (i+1) * delta < task_size:
-            tmp_list = task_list[i*delta:(i+1)*delta]
-        else:
-            tmp_list = task_list[i*delta:]
-
-        pool.apply_async(extract_feature_bat, args=(tmp_list))
+    extract_feature_bat(task_list)
+    # You can accelerate the feature extraction process by using multiprocess
+    # Uncomment the code below to accelerate the computation, and comment the line 399 'extract_feature_bat()'.
+    # p = 20
+    # pool = Pool(p)
+    # task_size = len(task_list)
+    # delta = task_size // p
+    # for i in range(p):
+    #     tmp_list = []
+    #     if (i+1) * delta < task_size:
+    #         tmp_list = task_list[i*delta:(i+1)*delta]
+    #     else:
+    #         tmp_list = task_list[i*delta:]
+    #
+    #     pool.apply_async(extract_feature_bat, args=(tmp_list))
 
 
 def extract_feature_bat(task_list):
@@ -440,43 +450,48 @@ if __name__ == "__main__":
     # we set the process default process number to 20,
     # you can modify it in the 'feature_extraction' function in this file.
 
-    feature_extraction(dataset='soybean', period='R1', config=configs['soybean_model'], isVenation=True)
-    feature_extraction(dataset='soybean', period='R3', config=configs['soybean_model'], isVenation=True)
-    feature_extraction(dataset='soybean', period='R4', config=configs['soybean_model'], isVenation=True)
-    feature_extraction(dataset='soybean', period='R5', config=configs['soybean_model'], isVenation=True)
-    feature_extraction(dataset='soybean', period='R6', config=configs['soybean_model'], isVenation=True)
-
-    feature_extraction(dataset='cherry', period=None, config=configs['flavia_model'], isVenation=False)
-    feature_extraction(dataset='swedish', period=None, config=configs['swedish_model'], isVenation=False)
-    feature_extraction(dataset='flavia', period=None, config=configs['flavia_model'], isVenation=False)
-
+    # feature_extraction(dataset='soybean', period='R1', config=configs['soybean_model'], isVenation=True)
+    # feature_extraction(dataset='soybean', period='R3', config=configs['soybean_model'], isVenation=True)
+    # feature_extraction(dataset='soybean', period='R4', config=configs['soybean_model'], isVenation=True)
+    # feature_extraction(dataset='soybean', period='R5', config=configs['soybean_model'], isVenation=True)
+    # feature_extraction(dataset='soybean', period='R6', config=configs['soybean_model'], isVenation=True)
+    #
+    # feature_extraction(dataset='cherry', period=None, config=configs['flavia_model'], isVenation=False)
+    # feature_extraction(dataset='flavia', period=None, config=configs['flavia_model'], isVenation=False)
+    # feature_extraction(dataset='swedish', period=None, config=configs['swedish_model'], isVenation=False)
 
     # -- Xception Model --
     # evaluate the xception model on swedish dataset
-    dataset = 'swedish'
-    config_swedish = configs['swedish_model']
-    xception(dataset)
+    # dataset = 'swedish'
+    # config_swedish = configs['swedish_model']
+    # config_swedish['dataset'] = dataset
+    # xception(dataset)
 
     # evaluate the xception model on flavia dataset
     # dataset = 'flavia'
+    # config_flavia['dataset'] = dataset
     # config_flavia = configs['flavia_model']
     # xception(dataset)
 
 
+
     # evalute the xception model on soybean dataset
     # R1 period
-    # dataset = 'soybean'
-    # period = 'R1'
-    # config_soybean_R1 = configs['soybean_model']
-    # config_soybean_R1['img_path'] = os.path.join(config_soybean_R1['img_path'], period)
-    # config_soybean_R1['shape_data_path'] = os.path.join(config_soybean_R1['shape_data_path'], period)
-    # config_soybean_R1['texture_data_path'] = os.path.join(config_soybean_R1['texture_data_path'], period)
-    # config_soybean_R1['vein_data_path'] = os.path.join(config_soybean_R1['vein_data_path'], period)
+    dataset = 'soybean'
+    period = 'R1'
+    config_soybean_R1 = configs['soybean_model']
+    config_soybean_R1['dataset'] = dataset
+    config_soybean_R1['img_path'] = os.path.join(config_soybean_R1['img_path'], period)
+    config_soybean_R1['shape_data_path'] = os.path.join(config_soybean_R1['shape_data_path'], period)
+    config_soybean_R1['texture_data_path'] = os.path.join(config_soybean_R1['texture_data_path'], period)
+    config_soybean_R1['vein_data_path'] = os.path.join(config_soybean_R1['vein_data_path'], period)
+    xception(dataset='soybean', config=config_soybean_R1, period='R1')
 
     # R3 period
     # dataset = 'soybean'
     # period = 'R3'
     # config_soybean_R3 = configs['soybean_model']
+    # config_soybean_R3['dataset'] = dataset
     # config_soybean_R3['img_path'] = os.path.join(config_soybean_R3['img_path'], period)
     # config_soybean_R3['shape_data_path'] = os.path.join(config_soybean_R3['shape_data_path'], period)
     # config_soybean_R3['texture_data_path'] = os.path.join(config_soybean_R3['texture_data_path'], period)
@@ -486,6 +501,7 @@ if __name__ == "__main__":
     # dataset = 'soybean'
     # period = 'R4'
     # config_soybean_R4 = configs['soybean_model']
+    # config_soybean_R4['dataset'] = dataset
     # config_soybean_R4['img_path'] = os.path.join(config_soybean_R4['img_path'], period)
     # config_soybean_R4['shape_data_path'] = os.path.join(config_soybean_R4['shape_data_path'], period)
     # config_soybean_R4['texture_data_path'] = os.path.join(config_soybean_R4['texture_data_path'], period)
@@ -496,6 +512,7 @@ if __name__ == "__main__":
     # dataset = 'soybean'
     # period = 'R5'
     # config_soybean_R5 = configs['soybean_model']
+    # config_soybean_R5['dataset'] = dataset
     # config_soybean_R5['img_path'] = os.path.join(config_soybean_R5['img_path'], period)
     # config_soybean_R5['shape_data_path'] = os.path.join(config_soybean_R5['shape_data_path'], period)
     # config_soybean_R5['texture_data_path'] = os.path.join(config_soybean_R5['texture_data_path'], period)
@@ -506,6 +523,7 @@ if __name__ == "__main__":
     # dataset = 'soybean'
     # period = 'R6'
     # config_soybean_R6 = configs['soybean_model']
+    # config_soybean_R6['dataset'] = dataset
     # config_soybean_R6['img_path'] = os.path.join(config_soybean_R6['img_path'], period)
     # config_soybean_R6['shape_data_path'] = os.path.join(config_soybean_R6['shape_data_path'], period)
     # config_soybean_R6['texture_data_path'] = os.path.join(config_soybean_R6['texture_data_path'], period)
@@ -515,6 +533,7 @@ if __name__ == "__main__":
     #evaluate the xception model on cherry dataset
     # dataset = 'cherry'
     # config_cherry = configs['cherry_model']
+    # config_cherry['dataset'] = dataset
     # xception(dataset, config_cherry)
 
 
@@ -525,7 +544,7 @@ if __name__ == "__main__":
     #
     # tp_xception('cherry', config_cherry, isVenation=True)
     #
-    # tp_xception('soybean', config_soybean_R1, isVenation=True)
+    #tp_xception('soybean', config_soybean_R1, isVenation=True)
     #
     # tp_xception('soybean', config_soybean_R3, isVenation=True)
     #
