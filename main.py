@@ -15,10 +15,10 @@ import os
 from multiprocessing import Pool
 from skimage import io as skio
 
-iteration = 1
+iteration = 10
 
 
-def xception(dataset, config, period='N'):
+def xception(dataset, config, period=''):
     # config = configs[dataset+"_model"]
     x_list, y_list = utils.get_dataset_file_list(config['img_path'])
     img_x_list, y_list = utils.data_loader_for_xception_model(file_list=x_list, config=config)
@@ -29,6 +29,7 @@ def xception_model_training_and_test(img_x_list, y_list, config):
     x = np.array(img_x_list)
     y = np.array(y_list)
     dataset = config['dataset']
+    period = config['period']
     id_map = np.loadtxt(dataset+'_id.txt')
     for index, d in enumerate(y):
         for label in id_map:
@@ -63,13 +64,14 @@ def xception_model_training_and_test(img_x_list, y_list, config):
         save_bset_weight = ModelCheckpoint('xception_img_{}_itreation-{}-{}.hdf5'.format(dataset, i, period),
                                            monitor='val_loss', verbose=1, save_best_only=True, mode='auto',
                                            save_weights_only=True)
-
+        # you can change the parallels to create multi_gpu_model if you have more than one GPU available
         model = BaseModel.Xception_Model(parallels=0, config=config)
+        # you should set a smaller batch_size if you GPU memory is limited
         model.fit(X_train, y_train, batch_size=100, epochs=100, validation_split=0.1,
                   callbacks=[lr_adjust, save_bset_weight])
         K.clear_session()
 
-        model2 = BaseModel.Xception_Model(parallels=4, config=config)
+        model2 = BaseModel.Xception_Model(parallels=0, config=config)
         model2.load_weights('xception_img_{}_itreation-{}-{}.hdf5'.format(dataset, i, period))
 
 
@@ -166,6 +168,8 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
                                   factor=0.5,
                                   patience=5,
                                   min_lr=1e-5)
+    dataset = config['dataset']
+    period = config['period']
 
     for i in range(iteration):
         index = np.arange(len(y))
@@ -281,7 +285,6 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
         plot_result(result)
 
 
-
 def xception_multi_period_score_fusion(dataset, config):
     result = []
     for i in range(iteration):
@@ -353,6 +356,7 @@ def tp_xception_multi_period_score_fusion(dataset, config):
 def mixing_all_period_tp_xception(config):
     x_list = []
     y_list = []
+    dataset = 'soybean'
     for period in ['R1', 'R3', 'R4', 'R5', 'R6']:
         tmp_x_list, tmp_y_list = utils.get_dataset_file_list(os.path.join(config['img_path'], period))
         x_list.append(tmp_x_list)
@@ -444,12 +448,88 @@ if __name__ == "__main__":
         #####      Please read the readme.md file first!!!                     ######
         #############################################################################
     '''
-    # -- Topological Feature Extraction -- #
-    # This process is time consuming,so we dump pd as txt files, please ensure there enough disk space to store them.
-    # The feature extraction process may take a long time, we recommend you run the code on a multi-core computer,
-    # we set the process default process number to 20,
-    # you can modify it in the 'feature_extraction' function in this file.
+    '''
+       1. We tested and refactored the code on a linux platform with multi-processors and 4 GPU.
+       2.You can change the training parameters according to the performance of your own device.
+       3.Because the topological feature extraction is a time consuming process, we recommend 
+        you save the result of feature extraction.
+       4. The dataset folder structure should be set as below: (you can also use different setting, 
+       then you should modify the code)
+       5. The code configuration can be found in the file config/model_configuration.py
+       Example:
+       
+       soybean [dataset name]
+       |--shape-feature                 [shape feature folder]
+          |--class 1                    [the class number e.g. 022]
+          |   |--period                 [optional, only the soybean dataset have different growth period, e.g. R1]
+          |   |   |--file0_0.txt        [the topological feature of direction 0]
+          |   |   |--file0_1.txt
+          |   |   |--file0_2.txt
+          |   |   |-- ...
+          |   |   |--file0_29.txt
+          |   |   |-- ...
+          |   |   |--filen_m.txt
+          |--class 2
+          |   |--period                
+          |   |   |--file0_0.txt        
+          |   |   |--file0_1.txt
+          |   |   |--file0_2.txt
+          |   |   |-- ...
+          |   |   |--file0_29.txt
+          |   |   |-- ...
+          |   |   |--filen_m.txt
+       |--texture-feature
+          |--class 1                      [the class number e.g. 022]
+          |   |--period                   [optional, only the soybean dataset have different growth period, e.g. R1]
+          |   |   |--file0_pd0.txt        [the topological feature of pd0]
+          |   |   |--file0_pd1.txt        [the topological feature of pd1]
+          |   |   |--file0_2.txt
+          |   |   |-- ... 
+          |   |   |--filen_pd1.txt
+          |--class 2
+          |   |--period                
+          |   |   |--file0_pd0.txt        
+          |   |   |--file0_pd1.txt        
+          |   |   |--file0_2.txt
+          |   |   |-- ... 
+          |   |   |--filen_pd1.txt       
+       |--venation-feature
+          |--class 1                      [the class number e.g. 022]
+          |   |--period                   [optional, only the soybean dataset have different growth period, e.g. R1]
+          |   |   |--file0_pd0.txt        [the topological feature of pd0]
+          |   |   |--file0_pd1.txt        [the topological feature of pd1]
+          |   |   |--file0_2.txt
+          |   |   |-- ... 
+          |   |   |--filen_pd1.txt
+          |--class 2
+          |   |--period                
+          |   |   |--file0_pd0.txt        
+          |   |   |--file0_pd1.txt        
+          |   |   |--file0_2.txt
+          |   |   |-- ... 
+          |   |   |--filen_pd1.txt                           
+       |--leaf-image
+          |--class 1                      [the class number e.g. 022]
+          |   |--period                   [optional, only the soybean dataset have different growth period, e.g. R1]
+          |   |   |--file0.png            [the topological feature of pd0]
+          |   |   |-- ... 
+          |   |   |--filen.png
+              |--class 1                  
+          |   |--period                   
+          |   |   |--file0.png            
+          |   |   |-- ... 
+          |   |   |--filen.png       
+         
+    '''
 
+
+    '''
+        # -- Topological Feature Extraction -- #
+        # This process is time consuming,so we dump pd as txt files, please ensure there enough disk space to store them.
+        # The feature extraction process may take a long time, we recommend you run the code on a multi-core computer,
+        # we set the process default process number to 20,
+        # you can modify it in the 'feature_extraction' function in this file.
+    '''
     # feature_extraction(dataset='soybean', period='R1', config=configs['soybean_model'], isVenation=True)
     # feature_extraction(dataset='soybean', period='R3', config=configs['soybean_model'], isVenation=True)
     # feature_extraction(dataset='soybean', period='R4', config=configs['soybean_model'], isVenation=True)
@@ -460,8 +540,10 @@ if __name__ == "__main__":
     # feature_extraction(dataset='flavia', period=None, config=configs['flavia_model'], isVenation=False)
     # feature_extraction(dataset='swedish', period=None, config=configs['swedish_model'], isVenation=False)
 
+    '''
     # -- Xception Model --
     # evaluate the xception model on swedish dataset
+    '''
     # dataset = 'swedish'
     # config_swedish = configs['swedish_model']
     # config_swedish['dataset'] = dataset
@@ -474,77 +556,87 @@ if __name__ == "__main__":
     # xception(dataset)
 
 
-
+    '''
     # evalute the xception model on soybean dataset
     # R1 period
-    dataset = 'soybean'
-    period = 'R1'
-    config_soybean_R1 = configs['soybean_model']
-    config_soybean_R1['dataset'] = dataset
-    config_soybean_R1['img_path'] = os.path.join(config_soybean_R1['img_path'], period)
-    config_soybean_R1['shape_data_path'] = os.path.join(config_soybean_R1['shape_data_path'], period)
-    config_soybean_R1['texture_data_path'] = os.path.join(config_soybean_R1['texture_data_path'], period)
-    config_soybean_R1['vein_data_path'] = os.path.join(config_soybean_R1['vein_data_path'], period)
-    xception(dataset='soybean', config=config_soybean_R1, period='R1')
+    '''
+    # dataset = 'soybean'
+    # period = 'R1'
+    # config_soybean_R1 = configs['soybean_model']
+    # config_soybean_R1['dataset'] = dataset
+    # config_soybean_R1['period'] = period
+    # config_soybean_R1['img_path'] = os.path.join(config_soybean_R1['img_path'], period)
+    # config_soybean_R1['shape_data_path'] = os.path.join(config_soybean_R1['shape_data_path'], period)
+    # config_soybean_R1['texture_data_path'] = os.path.join(config_soybean_R1['texture_data_path'], period)
+    # config_soybean_R1['vein_data_path'] = os.path.join(config_soybean_R1['vein_data_path'], period)
+    # xception(dataset='soybean', config=config_soybean_R1, period='R1')
 
     # R3 period
     # dataset = 'soybean'
     # period = 'R3'
     # config_soybean_R3 = configs['soybean_model']
     # config_soybean_R3['dataset'] = dataset
+    # config_soybean_R3['period'] = period
     # config_soybean_R3['img_path'] = os.path.join(config_soybean_R3['img_path'], period)
     # config_soybean_R3['shape_data_path'] = os.path.join(config_soybean_R3['shape_data_path'], period)
     # config_soybean_R3['texture_data_path'] = os.path.join(config_soybean_R3['texture_data_path'], period)
     # config_soybean_R3['vein_data_path'] = os.path.join(config_soybean_R3['vein_data_path'], period)
+    # xception(dataset='soybean', config=config_soybean_R3, period='R3')
 
     # R4 period
     # dataset = 'soybean'
     # period = 'R4'
     # config_soybean_R4 = configs['soybean_model']
     # config_soybean_R4['dataset'] = dataset
+    # config_soybean_R4['period'] = period
     # config_soybean_R4['img_path'] = os.path.join(config_soybean_R4['img_path'], period)
     # config_soybean_R4['shape_data_path'] = os.path.join(config_soybean_R4['shape_data_path'], period)
     # config_soybean_R4['texture_data_path'] = os.path.join(config_soybean_R4['texture_data_path'], period)
     # config_soybean_R4['vein_data_path'] = os.path.join(config_soybean_R4['vein_data_path'], period)
-
+    # xception(dataset='soybean', config=config_soybean_R4, period='R4')
 
     # R5 period
     # dataset = 'soybean'
     # period = 'R5'
     # config_soybean_R5 = configs['soybean_model']
     # config_soybean_R5['dataset'] = dataset
+    # config_soybean_R5['period'] = period
     # config_soybean_R5['img_path'] = os.path.join(config_soybean_R5['img_path'], period)
     # config_soybean_R5['shape_data_path'] = os.path.join(config_soybean_R5['shape_data_path'], period)
     # config_soybean_R5['texture_data_path'] = os.path.join(config_soybean_R5['texture_data_path'], period)
     # config_soybean_R5['vein_data_path'] = os.path.join(config_soybean_R5['vein_data_path'], period)
-
+    # xception(dataset='soybean', config=config_soybean_R5, period='R5')
 
     # R6 period
     # dataset = 'soybean'
     # period = 'R6'
     # config_soybean_R6 = configs['soybean_model']
     # config_soybean_R6['dataset'] = dataset
+    # config_soybean_R6['period'] = period
     # config_soybean_R6['img_path'] = os.path.join(config_soybean_R6['img_path'], period)
     # config_soybean_R6['shape_data_path'] = os.path.join(config_soybean_R6['shape_data_path'], period)
     # config_soybean_R6['texture_data_path'] = os.path.join(config_soybean_R6['texture_data_path'], period)
     # config_soybean_R6['vein_data_path'] = os.path.join(config_soybean_R6['vein_data_path'], period)
+    # xception(dataset='soybean', config=config_soybean_R6, period='R6')
 
-
+    '''
     #evaluate the xception model on cherry dataset
+    '''
     # dataset = 'cherry'
     # config_cherry = configs['cherry_model']
     # config_cherry['dataset'] = dataset
-    # xception(dataset, config_cherry)
+    # xception(dataset = dataset, config=config_cherry)
 
-
+    '''
     # --TP+Xception Model --
+    '''
     # tp_xception('swedish', config_swedish, isVenation=False)
     #
     # tp_xception('flavia', config_flavia, isVenation=False)
     #
     # tp_xception('cherry', config_cherry, isVenation=True)
     #
-    #tp_xception('soybean', config_soybean_R1, isVenation=True)
+    # tp_xception('soybean', config_soybean_R1, isVenation=True)
     #
     # tp_xception('soybean', config_soybean_R3, isVenation=True)
     #
@@ -554,19 +646,23 @@ if __name__ == "__main__":
     #
     # tp_xception('soybean', config_soybean_R6, isVenation=True)
 
+    '''
     #-- Soybean TP+Xception model score fusion
-
+    '''
     # tp_xception_multi_period_score_fusion(dataset='soybean', config=configs['soybean_model'])
 
+    '''
     #-- Soybean Xception model score fusion
+    '''
     # xception_multi_period_score_fusion(dataset='soybean', config=configs['soybean_model'])
 
+    '''
     #-- Soybean TP+Xception Mixing all period
-
+    '''
     # mixing_all_period_tp_xception(config=configs['soybean_model'])
 
-
+    '''
     #-- Soybean Xception Mxing all period
-
+    '''
     # mixing_all_period_xception(config=configs['soybean_model'])
 
