@@ -56,10 +56,10 @@ configs['soybean_model'] = {
 }
 
 configs['cherry_model'] = {
-    "texture_data_path": r"/home/zyp/pda-docker-data/final_experiment/cherry_dataset_cultivar100/texture_pd",
-    "shape_data_path": r"/home/zyp/pda-docker-data/final_experiment/cherry_dataset_cultivar100/shape_pd",
-    "vein_data_path": r"/home/zyp/pda-docker-data/final_experiment/cherry_dataset_cultivar100/vein_pd",
-    "img_path": r"/home/zyp/pda-docker-data/final_experiment/cherry_dataset_cultivar100/cherry_jpg256_cultivar100",
+    "texture_data_path": r"/home/zyp/pda-docker-data/final_experiment/cherry_dataset_cultivar88/texture_pd",
+    "shape_data_path": r"/home/zyp/pda-docker-data/final_experiment/cherry_dataset_cultivar88/shape_pd",
+    "vein_data_path": r"/home/zyp/pda-docker-data/final_experiment/cherry_dataset_cultivar88/vein_pd",
+    "img_path": r"/home/zyp/pda-docker-data/final_experiment/cherry_dataset_cultivar88/cherry_jpg256_cultivar88",
     "views": 34,
     "shape_views": shape_views,
     "texture_views": texture_views,
@@ -75,7 +75,7 @@ configs['cherry_model'] = {
     "pht_threshold_vein": pht_threshold_vein,
 
     "N": [int(d) for d in point_number_list],
-    "classes": 100,
+    "classes": 88,
     "image_size": (256, 256),
     "regx_str": r'\S{1,}_d'
 }
