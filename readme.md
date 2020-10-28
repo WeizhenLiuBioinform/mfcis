@@ -25,3 +25,4 @@ The dockerfile and homcloud package can be found in the dockerfile folder. We st
 > - You should configuration the *_dipha_* path in 
   pershombox/_software_backends/software_backends.cfg
 > - The main.py is the entrance of the program, you can uncomment or comment the code to validate different models.
+>- The docker container should be run under a common user accout other than a root account.
