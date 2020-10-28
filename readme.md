@@ -26,3 +26,6 @@ The dockerfile and homcloud package can be found in the dockerfile folder. We st
   pershombox/_software_backends/software_backends.cfg
 > - The main.py is the entrance of the program, you can uncomment or comment the code to validate different models.
 >- The docker container should be run under a common user accout other than a root account.
+
+### The detail configuration of file path and other settings are shown in the source code by comment.
+The core functions are under the folder named feature_extraction and model, you can also modify the pipeline in your way.
