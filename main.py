@@ -162,6 +162,12 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
     if isVenation:
         vein_x = np.array(vein_x)
     y = np.array(y_list)
+    dataset = config['dataset']
+    id_map = np.loadtxt(dataset+'_id.txt')
+    for index, d in enumerate(y):
+        for label in id_map:
+            if d == label[0]:
+                y[index] = label[1]
     y_one_hot = to_categorical(y)
     result = []
     lr_adjust = ReduceLROnPlateau(monitor='val_loss',
@@ -297,6 +303,12 @@ def xception_multi_period_score_fusion(dataset, config):
             img_x_list, y_list = utils.data_loader_for_xception_model(file_list=file_list, config=config)
             x = np.array(img_x_list)
             y = np.array(y_list)
+            id_map = np.loadtxt(dataset + '_id.txt')
+            for index, d in enumerate(y):
+                for label in id_map:
+                    if d == label[0]:
+                        y[index] = label[1]
+
             y_one_hot = to_categorical(y)
             test_index = np.load('{}_iteration_{}_img_{}_xception_test_index.npy'.format(dataset, i, period))
             img_x_test = x[test_index]
@@ -331,6 +343,11 @@ def tp_xception_multi_period_score_fusion(dataset, config):
             img_x_list, y_list = utils.data_loader_for_xception_model(file_list=file_list, config=config)
             x = np.array(img_x_list)
             y = np.array(y_list)
+            id_map = np.loadtxt(dataset + '_id.txt')
+            for index, d in enumerate(y):
+                for label in id_map:
+                    if d == label[0]:
+                        y[index] = label[1]
             y_one_hot = to_categorical(y)
             test_index = np.load('{}_iteration_{}_img_{}_tp_xception_test_index.npy'.format(dataset, i, period))
             img_x_test = x[test_index]
@@ -560,16 +577,16 @@ if __name__ == "__main__":
     # evalute the xception model on soybean dataset
     # R1 period
     '''
-    # dataset = 'soybean'
-    # period = 'R1'
-    # config_soybean_R1 = configs['soybean_model']
-    # config_soybean_R1['dataset'] = dataset
-    # config_soybean_R1['period'] = period
-    # config_soybean_R1['img_path'] = os.path.join(config_soybean_R1['img_path'], period)
-    # config_soybean_R1['shape_data_path'] = os.path.join(config_soybean_R1['shape_data_path'], period)
-    # config_soybean_R1['texture_data_path'] = os.path.join(config_soybean_R1['texture_data_path'], period)
-    # config_soybean_R1['vein_data_path'] = os.path.join(config_soybean_R1['vein_data_path'], period)
-    # xception(dataset='soybean', config=config_soybean_R1, period='R1')
+    dataset = 'soybean'
+    period = 'R1'
+    config_soybean_R1 = configs['soybean_model']
+    config_soybean_R1['dataset'] = dataset
+    config_soybean_R1['period'] = period
+    config_soybean_R1['img_path'] = os.path.join(config_soybean_R1['img_path'], period)
+    config_soybean_R1['shape_data_path'] = os.path.join(config_soybean_R1['shape_data_path'], period)
+    config_soybean_R1['texture_data_path'] = os.path.join(config_soybean_R1['texture_data_path'], period)
+    config_soybean_R1['vein_data_path'] = os.path.join(config_soybean_R1['vein_data_path'], period)
+    xception(dataset='soybean', config=config_soybean_R1, period='R1')
 
     # R3 period
     # dataset = 'soybean'
