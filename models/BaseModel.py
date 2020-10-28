@@ -9,7 +9,8 @@ from keras.utils import multi_gpu_model
 from keras.applications.xception import Xception
 import tensorflow as tf
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
+## set the id of available gpu e.g. "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
 
 # PD Layer 定义，用于纹理和叶脉的PD
 class PD_Layer(Layer):
