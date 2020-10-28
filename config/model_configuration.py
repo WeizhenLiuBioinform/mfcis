@@ -75,7 +75,6 @@ configs['cherry_model'] = {
     "pht_threshold_vein": pht_threshold_vein,
 
     "N": [int(d) for d in point_number_list],
-    "classes": 88,
     "image_size": (256, 256),
     "regx_str": r'\S{1,}_d'
 }
