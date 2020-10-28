@@ -8,6 +8,8 @@ from keras.optimizers import RMSprop
 from keras.utils import multi_gpu_model
 from keras.applications.xception import Xception
 import tensorflow as tf
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
 
 # PD Layer 定义，用于纹理和叶脉的PD
 class PD_Layer(Layer):
@@ -142,17 +144,17 @@ def Combined_Model(parallels, config):
         x = Dense(config['classes'], activation='softmax')(x)
         fused_model = Model(input=inputs, outputs=x)
         rmsprop = RMSprop(lr=0)
-        if (parallels > 1):
-            parallel_model = multi_gpu_model(fused_model, gpus=parallels)
-            parallel_model.compile(optimizer=rmsprop,
+    if (parallels > 1):
+        parallel_model = multi_gpu_model(fused_model, gpus=parallels)
+        parallel_model.compile(optimizer=rmsprop,
                                    loss='categorical_crossentropy',
                                    metrics=['categorical_accuracy'])
-            return parallel_model
-        else:
-            fused_model.compile(optimizer=rmsprop,
+        return parallel_model
+    else:
+        fused_model.compile(optimizer=rmsprop,
                                 loss='categorical_crossentropy',
                                 metrics=['categorical_accuracy'])
-            return fused_model
+        return fused_model
 
 
 def Xception_Model(parallels, config):
@@ -169,14 +171,14 @@ def Xception_Model(parallels, config):
         x = Dropout(0.5)(x)
         y = Dense(config['classes'], activation='softmax')(x)
         model = Model(inputs=base_model.input, outputs=y)
-        if parallels > 1:
-            parallel_model = multi_gpu_model(model, gpus=parallels)
-            parallel_model.compile(optimizer='sgd',
+    if parallels > 1:
+        parallel_model = multi_gpu_model(model, gpus=parallels)
+        parallel_model.compile(optimizer='sgd',
                                loss='categorical_crossentropy',
                                metrics=['categorical_accuracy'])
-            return parallel_model
-        else:
-            model.compile(optimizer='sgd',
+        return parallel_model
+    else:
+        model.compile(optimizer='sgd',
                                loss='categorical_crossentropy',
                                metrics=['categorical_accuracy'])
-        return model
+    return model
