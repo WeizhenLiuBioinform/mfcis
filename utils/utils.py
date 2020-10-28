@@ -1,10 +1,43 @@
 import numpy as np
 import os
-# from tqdm import *
+from tqdm import *
 import re
 from skimage import io as skio
 from skimage.transform import resize
-from config.model_configuration import configs, view_combination
+from config.model_configuration import configs, view_combination, pht_threshold_shape, pht_threshold_vein, pht_threshold_texture,shape_point_num, texture_and_vein_point_num
+
+# pd transform
+class PHT:
+    def __init__(self, v):
+        self.b_1 = np.reshape(np.array([1, 1]) / np.sqrt(2), [1, 2])
+        self.b_2 = np.reshape(np.array([-1, 1]) / np.sqrt(2), [1, 2])
+        self.v = v
+
+    def __call__(self, pds):
+        x = pds * np.repeat(self.b_1, pds.shape[0], axis=0)
+        x = np.sum(x, axis=1)
+        y = pds * np.repeat(self.b_2, pds.shape[0], axis=0)
+        y = np.sum(y, axis=1)
+        i = [y <= self.v]
+        y[i] = np.log(y[i] / self.v) + self.v
+        ret = np.stack([x, y], axis=1)
+        return ret
+
+pht = {}
+pht['shape'] = PHT(pht_threshold_shape)
+pht['texture'] = PHT(pht_threshold_texture)
+pht['venation'] = PHT(pht_threshold_vein)
+
+
+def get_persistence(pd, N):
+    persistence = pd[:, 1] - pd[:, 0]
+    index = np.argsort(persistence)[::-1]
+    if len(index) > N:
+        return index[0:N]
+    else:
+        temp = np.repeat(index[-1], N-len(index))
+        index = np.concatenate([index, temp])
+        return index
 
 
 def data_loader_for_combined_model(file_list, dataset, config, isVenation):
@@ -13,10 +46,11 @@ def data_loader_for_combined_model(file_list, dataset, config, isVenation):
     img_x = []
     vein_x = []
     y = []
+    maxVal = config['max_val']
     regx_str = config['regx_str']
     regx = re.compile(regx_str)
-    for path in file_list:
-        path = path[:-1]
+    for path in tqdm(file_list):
+        path = path.strip()
         strs = str.split(path, '/')
         f_name = regx.findall(strs[-1])[0]
         d = strs[-2][2:]
@@ -35,27 +69,70 @@ def data_loader_for_combined_model(file_list, dataset, config, isVenation):
         texture_multiview_x = []
         if isVenation:
             vein_multiview_x = []
+
         for i in range(config['shape_views']):
             channel_1 = np.loadtxt(
                 os.path.join(shape_parent_path, f_name + '_' + str(view_combination[i][0]) + '.txt'))
+
+            if channel_1.size < 4:
+                channel_1 = np.reshape(channel_1, [1, 2])
+                channel_1 = np.repeat(channel_1, 100, axis=0)
+
+            index1 = get_persistence(channel_1, shape_point_num)
+            vec1 = channel_1[index1]
+            vector1 = pht['shape'](vec1)
+
             channel_2 = np.loadtxt(
                 os.path.join(shape_parent_path, f_name + '_' + str(view_combination[i][1]) + '.txt'))
+
+            if channel_2.size < 4:
+                channel_2 = np.reshape(channel_2, [1, 2])
+                channel_2 = np.repeat(channel_2, 100, axis=0)
+
+            index2 = get_persistence(channel_2, shape_point_num)
+            vec2 = channel_2[index2]
+            vector2 = pht['shape'](vec2)
+
             channel_3 = np.loadtxt(
                 os.path.join(shape_parent_path, f_name + '_' + str(view_combination[i][2]) + '.txt'))
-            feature = np.dstack([channel_1, channel_2, channel_3])
+
+            if channel_3.size < 4:
+                channel_3 = np.reshape(channel_3, [1, 2])
+                channel_3 = np.repeat(channel_3, 100, axis=0)
+
+            index3 = get_persistence(channel_3, shape_point_num)
+            vec3 = channel_3[index3]
+            vector3 = pht['shape'](vec3)
+
+            feature = np.dstack([vector1, vector2, vector3])
             flag = np.sum(np.isinf(feature).astype(int))
             if flag > 0:
                 print("Inf Error: {}".format(f_name))
             shape_multiview_x.append(feature)
 
         for j in range(config['texture_views']):
-            texture_pairs = np.loadtxt(os.path.join(texture_parent_path, f_name + 'pd' + str(j) + '.txt'))
-            texture_multiview_x.append(texture_pairs)
+            texture_pairs = np.loadtxt(os.path.join(texture_parent_path, f_name + '-pd' + str(j) + '.txt'))
+
+            if texture_pairs.size < 4:
+                texture_pairs = np.reshape(texture_pairs, [1, 2])
+                texture_pairs = np.repeat(texture_pairs, 100, axis=0)
+
+            index4 = get_persistence(texture_pairs, texture_and_vein_point_num)
+            vec_texture = texture_pairs[index4]
+            vec_texture = pht['texture'](vec_texture) / maxVal
+            texture_multiview_x.append(vec_texture)
 
         if isVenation:
             for m in range(config['vein_views']):
                 vein_pairs = np.loadtxt(os.path.join(vein_parent_path, f_name + '-pd' + str(m) + '.txt'))
-                vein_multiview_x.append(vein_pairs)
+                if vein_pairs.size < 4:
+                    vein_pairs = np.reshape(vein_pairs, [1, 2])
+                    vein_pairs = np.repeat(vein_pairs, 100, axis=0)
+
+                index5 = get_persistence(vein_pairs, texture_and_vein_point_num)
+                vec_vein = vein_pairs[index5]
+                vec_vein = pht['venation'](vec_vein) /maxVal
+                vein_multiview_x.append(vec_vein)
 
         img_f_path = os.path.join(path)
         img = skio.imread(img_f_path)
@@ -69,7 +146,10 @@ def data_loader_for_combined_model(file_list, dataset, config, isVenation):
         y.append(int(d))
         if isVenation:
             vein_x.append(vein_multiview_x)
-            return img_x, shape_x, texture_x, vein_x, y
+
+    if isVenation:
+        return img_x, shape_x, texture_x, vein_x, y
+
     return img_x, shape_x, texture_x, y
 
 
