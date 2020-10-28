@@ -31,10 +31,10 @@ print(view_combination)
 
 
 configs['soybean_model'] = {
-    "texture_data_path": r'/mfcis/dataset/soybean/soybean-dataset-texture-txt',
-    "vein_data_path": r"/mfcis/dataset/soybean/soybean-dataset-vein-txt",
-    "shape_data_path": r"/mfcis/dataset/soybean/soybean-dataset-contour-pdm",
-    "img_path": r"/mfcis/dataset/soybean/soybean_cultivar100_img",
+    "texture_data_path": r'/home/zyp/MFCIS/dataset/soybean/soybean-dataset-texture-txt',
+    "vein_data_path": r"/home/zyp/MFCIS/dataset/soybean/soybean-dataset-vein-txt",
+    "shape_data_path": r"/home/zyp/MFCIS/dataset/soybean/soybean-dataset-contour-pdm",
+    "img_path": r"/home/zyp/MFCIS/dataset/soybean/soybean_cultivar100_img",
     "views": 34,
     "shape_views": shape_views,
     "texture_views": texture_views,
@@ -52,14 +52,15 @@ configs['soybean_model'] = {
     "N": [int(d) for d in point_number_list],
     "classes": 100,
     "image_size": (256, 256),
-    "regx_str": r'\S{1,}_t'
+    "regx_str": r'\S{1,}_t',
+    "max_val": 65535
 }
 
 configs['cherry_model'] = {
-    "texture_data_path": r"/home/zyp/pda-docker-data/final_experiment/cherry_dataset_cultivar88/texture_pd",
-    "shape_data_path": r"/home/zyp/pda-docker-data/final_experiment/cherry_dataset_cultivar88/shape_pd",
-    "vein_data_path": r"/home/zyp/pda-docker-data/final_experiment/cherry_dataset_cultivar88/vein_pd",
-    "img_path": r"/home/zyp/pda-docker-data/final_experiment/cherry_dataset_cultivar88/cherry_jpg256_cultivar88",
+    "texture_data_path": r"/home/zyp/MFCIS/dataset/cherry/texture_pd",
+    "shape_data_path": r"/home/zyp/MFCIS/dataset/cherry/shape_pd",
+    "vein_data_path": r"/home/zyp/MFCIS/dataset/cherry/vein_pd",
+    "img_path": r"/home/zyp/MFCIS/dataset/cherry/cherry_jpg256_cultivar100",
     "views": 34,
     "shape_views": shape_views,
     "texture_views": texture_views,
@@ -76,13 +77,14 @@ configs['cherry_model'] = {
 
     "N": [int(d) for d in point_number_list],
     "image_size": (256, 256),
-    "regx_str": r'\S{1,}_d'
+    "regx_str": r'\S{1,}_d',
+    "max_val": 65535
 }
 
 configs['swedish_model'] = {
-    "texture_data_path": r"/mfcis/dataset/swedish/swedish-dataset-texture-txt",
-    "shape_data_path": r"/mfcis/dataset/swedish/swedish-dataset-contour-pdm",
-    "img_path": r"/mfcis/dataset/swedish/swedish-dataset-png",
+    "texture_data_path": r"/home/zyp/MFCIS/dataset/swedish/swedish-dataset-texture-txt",
+    "shape_data_path": r"/home/zyp/MFCIS/dataset/swedish/swedish-dataset-contour-pdm",
+    "img_path": r"/home/zyp/MFCIS/dataset/swedish/swedish-dataset-square-256",
     "views": 32,
     "shape_views": shape_views,
     "texture_views": 2,
@@ -94,13 +96,14 @@ configs['swedish_model'] = {
     "N": [int(d) for d in point_number_list],
     "classes": 15,
     "image_size": (256, 256),
-    "regx_str": r'l\d{1,}\S{1,}\d{1,3}'
+    "regx_str": r'l\d{1,}\S{1,}\d{1,3}',
+    "max_val": 255
 }
 
 configs['flavia_model'] = {
-    "texture_data_path": r"/home/zyp/public_dataset/flavia-dataset/flavia-dataset-texture-txt",
-    "shape_data_path": r"/home/zyp/public_dataset/flavia-dataset/flavia-pdm",
-    "img_path": r"/home/zyp/public_dataset/flavia-dataset/flavia",
+    "texture_data_path": r"/home/zyp/MFCIS/dataset/flavia/flavia-dataset-texture-txt",
+    "shape_data_path": r"/home/zyp/MFCIS/dataset/flavia/flavia-pdm",
+    "img_path": r"/home/zyp/MFCIS/dataset/flavia/flavia-dataset-img",
     "views": 32,
     "shape_views": shape_views,
     "texture_views": 2,
@@ -112,5 +115,6 @@ configs['flavia_model'] = {
     "N": [int(d) for d in point_number_list],
     "classes": 32,
     "image_size": (256, 192),
-    "regx_str":r'\d{4,}'
+    "regx_str":r'\d{4,}',
+    "max_val": 255
 }
