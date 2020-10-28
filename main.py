@@ -15,7 +15,7 @@ import os
 from multiprocessing import Pool
 from skimage import io as skio
 
-iteration = 10
+iteration = 1
 
 
 def xception(dataset, config, period=''):
@@ -65,9 +65,9 @@ def xception_model_training_and_test(img_x_list, y_list, config):
                                            monitor='val_loss', verbose=1, save_best_only=True, mode='auto',
                                            save_weights_only=True)
         # you can change the parallels to create multi_gpu_model if you have more than one GPU available
-        model = BaseModel.Xception_Model(parallels=0, config=config)
+        model = BaseModel.Xception_Model(parallels=2, config=config)
         # you should set a smaller batch_size if you GPU memory is limited
-        model.fit(X_train, y_train, batch_size=100, epochs=100, validation_split=0.1,
+        model.fit(X_train, y_train, batch_size=40, epochs=100, validation_split=0.1,
                   callbacks=[lr_adjust, save_bset_weight])
         K.clear_session()
 
@@ -167,7 +167,7 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
     for index, d in enumerate(y):
         for label in id_map:
             if d == label[0]:
-                y[index] = label[1]
+                y[index] = int(label[1])
     y_one_hot = to_categorical(y)
     result = []
     lr_adjust = ReduceLROnPlateau(monitor='val_loss',
@@ -180,7 +180,7 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
     for i in range(iteration):
         index = np.arange(len(y))
         # print(index)
-        X_train_index, X_test_index, y_train_index, y_test_index = train_test_split(index, y_one_hot,
+        X_train_index, X_test_index, y_train_index, y_test_index = train_test_split(index, y,
                                                                                     test_size=0.3,
                                                                                     random_state=i,
                                                                                     shuffle=True,
@@ -195,6 +195,7 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
         img_x_train = img_x[X_train_index]
         shape_x_train_list = [shape_x_train[:, i, :, :] for i in range(config["shape_views"])]
         texture_x_train_list = [texture_x_train[:, i, :, :] for i in range(config["texture_views"])]
+
         y_train = y_one_hot[y_train_index]
 
         if isVenation:
@@ -228,8 +229,8 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
                                            monitor='val_loss', verbose=1, save_best_only=True, mode='auto',
                                            save_weights_only=True)
 
-        model = BaseModel.Combined_Model(parallels=4, config=config)
-        model.fit(x_train_list, y_train, batch_size=45, epochs=100, validation_split=0.1, class_weight=class_weights,
+        model = BaseModel.Combined_Model(parallels=1, config=config)
+        model.fit(x_train_list, y_train, batch_size=20, epochs=100, validation_split=0.1, class_weight=class_weights,
                   callbacks=[lr_reduce,
                              ReduceLROnPlateau(monitor='val_loss', patience=3, min_lr=1e-6, factor=0.5),
                              save_bset_weight,
@@ -583,10 +584,10 @@ if __name__ == "__main__":
     config_soybean_R1['dataset'] = dataset
     config_soybean_R1['period'] = period
     config_soybean_R1['img_path'] = os.path.join(config_soybean_R1['img_path'], period)
-    config_soybean_R1['shape_data_path'] = os.path.join(config_soybean_R1['shape_data_path'], period)
-    config_soybean_R1['texture_data_path'] = os.path.join(config_soybean_R1['texture_data_path'], period)
-    config_soybean_R1['vein_data_path'] = os.path.join(config_soybean_R1['vein_data_path'], period)
-    xception(dataset='soybean', config=config_soybean_R1, period='R1')
+    config_soybean_R1['shape_data_path'] = os.path.join(config_soybean_R1['shape_data_path'])
+    config_soybean_R1['texture_data_path'] = os.path.join(config_soybean_R1['texture_data_path'])
+    config_soybean_R1['vein_data_path'] = os.path.join(config_soybean_R1['vein_data_path'])
+    # xception(dataset='soybean', config=config_soybean_R1, period='R1')
 
     # R3 period
     # dataset = 'soybean'
@@ -595,9 +596,9 @@ if __name__ == "__main__":
     # config_soybean_R3['dataset'] = dataset
     # config_soybean_R3['period'] = period
     # config_soybean_R3['img_path'] = os.path.join(config_soybean_R3['img_path'], period)
-    # config_soybean_R3['shape_data_path'] = os.path.join(config_soybean_R3['shape_data_path'], period)
-    # config_soybean_R3['texture_data_path'] = os.path.join(config_soybean_R3['texture_data_path'], period)
-    # config_soybean_R3['vein_data_path'] = os.path.join(config_soybean_R3['vein_data_path'], period)
+    # config_soybean_R3['shape_data_path'] = os.path.join(config_soybean_R3['shape_data_path'])
+    # config_soybean_R3['texture_data_path'] = os.path.join(config_soybean_R3['texture_data_path'])
+    # config_soybean_R3['vein_data_path'] = os.path.join(config_soybean_R3['vein_data_path'])
     # xception(dataset='soybean', config=config_soybean_R3, period='R3')
 
     # R4 period
@@ -607,9 +608,9 @@ if __name__ == "__main__":
     # config_soybean_R4['dataset'] = dataset
     # config_soybean_R4['period'] = period
     # config_soybean_R4['img_path'] = os.path.join(config_soybean_R4['img_path'], period)
-    # config_soybean_R4['shape_data_path'] = os.path.join(config_soybean_R4['shape_data_path'], period)
-    # config_soybean_R4['texture_data_path'] = os.path.join(config_soybean_R4['texture_data_path'], period)
-    # config_soybean_R4['vein_data_path'] = os.path.join(config_soybean_R4['vein_data_path'], period)
+    # config_soybean_R4['shape_data_path'] = os.path.join(config_soybean_R4['shape_data_path'])
+    # config_soybean_R4['texture_data_path'] = os.path.join(config_soybean_R4['texture_data_path'])
+    # config_soybean_R4['vein_data_path'] = os.path.join(config_soybean_R4['vein_data_path'])
     # xception(dataset='soybean', config=config_soybean_R4, period='R4')
 
     # R5 period
@@ -619,9 +620,9 @@ if __name__ == "__main__":
     # config_soybean_R5['dataset'] = dataset
     # config_soybean_R5['period'] = period
     # config_soybean_R5['img_path'] = os.path.join(config_soybean_R5['img_path'], period)
-    # config_soybean_R5['shape_data_path'] = os.path.join(config_soybean_R5['shape_data_path'], period)
-    # config_soybean_R5['texture_data_path'] = os.path.join(config_soybean_R5['texture_data_path'], period)
-    # config_soybean_R5['vein_data_path'] = os.path.join(config_soybean_R5['vein_data_path'], period)
+    # config_soybean_R5['shape_data_path'] = os.path.join(config_soybean_R5['shape_data_path'])
+    # config_soybean_R5['texture_data_path'] = os.path.join(config_soybean_R5['texture_data_path'])
+    # config_soybean_R5['vein_data_path'] = os.path.join(config_soybean_R5['vein_data_path'])
     # xception(dataset='soybean', config=config_soybean_R5, period='R5')
 
     # R6 period
@@ -631,9 +632,9 @@ if __name__ == "__main__":
     # config_soybean_R6['dataset'] = dataset
     # config_soybean_R6['period'] = period
     # config_soybean_R6['img_path'] = os.path.join(config_soybean_R6['img_path'], period)
-    # config_soybean_R6['shape_data_path'] = os.path.join(config_soybean_R6['shape_data_path'], period)
-    # config_soybean_R6['texture_data_path'] = os.path.join(config_soybean_R6['texture_data_path'], period)
-    # config_soybean_R6['vein_data_path'] = os.path.join(config_soybean_R6['vein_data_path'], period)
+    # config_soybean_R6['shape_data_path'] = os.path.join(config_soybean_R6['shape_data_path'])
+    # config_soybean_R6['texture_data_path'] = os.path.join(config_soybean_R6['texture_data_path'])
+    # config_soybean_R6['vein_data_path'] = os.path.join(config_soybean_R6['vein_data_path'])
     # xception(dataset='soybean', config=config_soybean_R6, period='R6')
 
     '''
@@ -653,7 +654,7 @@ if __name__ == "__main__":
     #
     # tp_xception('cherry', config_cherry, isVenation=True)
     #
-    # tp_xception('soybean', config_soybean_R1, isVenation=True)
+    tp_xception('soybean', config_soybean_R1, isVenation=True)
     #
     # tp_xception('soybean', config_soybean_R3, isVenation=True)
     #
