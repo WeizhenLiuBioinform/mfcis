@@ -11,7 +11,7 @@
 > - Python3
 > - Scikit-image, Scikit-learn
 > - Opencv
-> - Tensorflow 1.10, keras 2.1.0
+> - Tensorflow 1.15, keras 2.1.0
 > - ...
  
  The complete list of the required python packages and their version information can be found at _requirement.txt_
