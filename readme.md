@@ -1,6 +1,7 @@
 ## The Source Code of MFCIS
 ---
 ##### If you have any problem, please contact us!
+### ** Please enter the docker container and install the CUDA
 ### Environment requirement
 > - The computation of Persistence Diagram (PD) require the python package ![HomCloud](https://www.wpi-aimr.tohoku.ac.jp/hiraoka_labo/homcloud/index.en.html])
     and ![Dipha](https://github.com/DIPHA/dipha).
