@@ -1,16 +1,17 @@
-from keras.layers import Conv1D, Dropout, Dense, BatchNormalization, Input, Concatenate, MaxPooling2D, Reshape
-from keras.models import Model
-from keras import backend as K
-from keras.layers import Layer
-from keras import regularizers
-import keras
-from keras.optimizers import RMSprop
-from keras.utils import multi_gpu_model
-from keras.applications.xception import Xception
 import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.layers import Conv1D, Dropout, Dense, BatchNormalization, Input, Concatenate, MaxPooling2D, Reshape
+from tensorflow.keras.models import Model
+from tensorflow.keras import backend as K
+from tensorflow.keras.layers import Layer
+from tensorflow.keras import regularizers
+from tensorflow.keras.optimizers import RMSprop
+from tensorflow.keras.utils import multi_gpu_model
+from tensorflow.keras.applications.xception import Xception
 import os
 ## set the id of available gpu e.g. "0"
-os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+
 
 # PD Layer 定义，用于纹理和叶脉的PD
 class PD_Layer(Layer):
@@ -113,65 +114,66 @@ def stage_2(pd, direction, N, stage_1_kr=0.1, stage_1_drop_out_1=0.5, stage_1_ne
 
 # 将Slayer提取的PD的特征，于Xception 提取到的图像的特征在FC层处拼接在一起
 def Combined_Model(parallels, config):
-    with tf.device('/cpu:0'):
-        inputs = [Input(shape=(config['N'][i], 2, 3)) for i in range(config['shape_views'])]
-        inputs.extend(Input(shape=(config['N'][j], 2, 1)) for j in range(config['shape_views'], config['views']))
-        input_tensor = Input(shape=(config['image_size'][0], config['image_size'][1], 3))
-        inputs.append(input_tensor)
-        stage_1_outputs = []
-        for i in range(config['shape_views']):
-            model = stage_1(inputs[i], int(i), int(config['N'][i]), config['stage1_kr'], config['stage1_dropout'],
-                            int(config['stage1_neuron_num']))
-            stage_1_outputs.append(model.output)
+    # with tf.device('/cpu:0'):
+    inputs = [Input(shape=(config['N'][i], 2, 3)) for i in range(config['shape_views'])]
+    inputs.extend(Input(shape=(config['N'][j], 2, 1)) for j in range(config['shape_views'], config['views']))
+    input_tensor = Input(shape=(config['image_size'][0], config['image_size'][1], 3))
+    inputs.append(input_tensor)
+    stage_1_outputs = []
+    for i in range(config['shape_views']):
+        model = stage_1(inputs[i], int(i), int(config['N'][i]), config['stage1_kr'], config['stage1_dropout'],
+                        int(config['stage1_neuron_num']))
+        stage_1_outputs.append(model.output)
 
-        for j in range(30, 34):
-            model2 = stage_2(inputs[j], int(j), int(config['N'][j]), config['stage1_kr'], config['stage1_dropout'],
-                             int(config['stage1_neuron_num']))
-            stage_1_outputs.append(model2.output)
+    for j in range(30, 34):
+        model2 = stage_2(inputs[j], int(j), int(config['N'][j]), config['stage1_kr'], config['stage1_dropout'],
+                         int(config['stage1_neuron_num']))
+        stage_1_outputs.append(model2.output)
 
-        model_img = Xception(include_top=False,
-                             weights='imagenet',
-                             input_tensor=input_tensor,
-                             input_shape=(config['image_size'][0], config['image_size'][1], 3),
-                             pooling='max')
-
-        stage_1_outputs.append(model_img.output)
-
-        x = Concatenate(axis=1, name='concat')(stage_1_outputs)
-        x = Dropout(0.5)(x)
-        x = Dense(2048)(x)
-        x = BatchNormalization()(x)
-        x = Dropout(0.5)(x)
-        x = Dense(config['classes'], activation='softmax')(x)
-        fused_model = Model(input=inputs, outputs=x)
-        rmsprop = RMSprop(lr=0)
-    if (parallels > 1):
-        parallel_model = multi_gpu_model(fused_model, gpus=parallels)
-        parallel_model.compile(optimizer=rmsprop,
-                                   loss='categorical_crossentropy',
-                                   metrics=['categorical_accuracy'])
-        return parallel_model
-    else:
-        fused_model.compile(optimizer=rmsprop,
-                                loss='categorical_crossentropy',
-                                metrics=['categorical_accuracy'])
-        return fused_model
-
-
-def Xception_Model(parallels, config):
-    with tf.device('/cpu:0'):
-        input_tensor = Input(shape=(config['image_size'][0], config['image_size'][1], 3))
-        base_model = Xception(include_top=False,
+    model_img = Xception(include_top=False,
                          weights='imagenet',
                          input_tensor=input_tensor,
                          input_shape=(config['image_size'][0], config['image_size'][1], 3),
                          pooling='max')
-        x = base_model.output
-        print(x.shape)
-        x = Dense(2048, activation='relu')(x)
-        x = Dropout(0.5)(x)
-        y = Dense(config['classes'], activation='softmax')(x)
-        model = Model(inputs=base_model.input, outputs=y)
+
+    stage_1_outputs.append(model_img.output)
+
+    x = Concatenate(axis=1, name='concat')(stage_1_outputs)
+    x = Dropout(0.5)(x)
+    x = Dense(2048)(x)
+    x = BatchNormalization()(x)
+    x = Dropout(0.5)(x)
+    x = Dense(config['classes'], activation='softmax')(x)
+    fused_model = Model(input=inputs, outputs=x)
+    rmsprop = RMSprop(lr=0)
+
+    if (parallels > 1):
+        parallel_model = multi_gpu_model(fused_model, gpus=parallels)
+        parallel_model.compile(optimizer=rmsprop,
+                               loss='categorical_crossentropy',
+                               metrics=['categorical_accuracy'])
+        return parallel_model
+    else:
+        fused_model.compile(optimizer=rmsprop,
+                            loss='categorical_crossentropy',
+                            metrics=['categorical_accuracy'])
+        return fused_model
+
+
+def Xception_Model(parallels, config):
+    # with tf.device('/cpu:0'):
+    input_tensor = Input(shape=(config['image_size'][0], config['image_size'][1], 3))
+    base_model = Xception(include_top=False,
+                          weights='imagenet',
+                          input_tensor=input_tensor,
+                          input_shape=(config['image_size'][0], config['image_size'][1], 3),
+                          pooling='max')
+    x = base_model.output
+    print(x.shape)
+    x = Dense(2048, activation='relu')(x)
+    x = Dropout(0.5)(x)
+    y = Dense(config['classes'], activation='softmax')(x)
+    model = Model(inputs=base_model.input, outputs=y)
     if parallels > 1:
         parallel_model = multi_gpu_model(model, gpus=parallels)
         parallel_model.compile(optimizer='sgd',

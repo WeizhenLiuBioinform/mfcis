@@ -65,7 +65,7 @@ def xception_model_training_and_test(img_x_list, y_list, config):
                                            monitor='val_loss', verbose=1, save_best_only=True, mode='auto',
                                            save_weights_only=True)
         # you can change the parallels to create multi_gpu_model if you have more than one GPU available
-        model = BaseModel.Xception_Model(parallels=2, config=config)
+        model = BaseModel.Xception_Model(parallels=1, config=config)
         # you should set a smaller batch_size if you GPU memory is limited
         model.fit(X_train, y_train, batch_size=40, epochs=100, validation_split=0.1,
                   callbacks=[lr_adjust, save_bset_weight])
@@ -578,15 +578,15 @@ if __name__ == "__main__":
     # evalute the xception model on soybean dataset
     # R1 period
     '''
-    dataset = 'soybean'
-    period = 'R1'
-    config_soybean_R1 = configs['soybean_model']
-    config_soybean_R1['dataset'] = dataset
-    config_soybean_R1['period'] = period
-    config_soybean_R1['img_path'] = os.path.join(config_soybean_R1['img_path'], period)
-    config_soybean_R1['shape_data_path'] = os.path.join(config_soybean_R1['shape_data_path'])
-    config_soybean_R1['texture_data_path'] = os.path.join(config_soybean_R1['texture_data_path'])
-    config_soybean_R1['vein_data_path'] = os.path.join(config_soybean_R1['vein_data_path'])
+    # dataset = 'soybean'
+    # period = 'R1'
+    # config_soybean_R1 = configs['soybean_model']
+    # config_soybean_R1['dataset'] = dataset
+    # config_soybean_R1['period'] = period
+    # config_soybean_R1['img_path'] = os.path.join(config_soybean_R1['img_path'], period)
+    # config_soybean_R1['shape_data_path'] = os.path.join(config_soybean_R1['shape_data_path'])
+    # config_soybean_R1['texture_data_path'] = os.path.join(config_soybean_R1['texture_data_path'])
+    # config_soybean_R1['vein_data_path'] = os.path.join(config_soybean_R1['vein_data_path'])
     # xception(dataset='soybean', config=config_soybean_R1, period='R1')
 
     # R3 period
@@ -640,10 +640,12 @@ if __name__ == "__main__":
     '''
     #evaluate the xception model on cherry dataset
     '''
-    # dataset = 'cherry'
-    # config_cherry = configs['cherry_model']
-    # config_cherry['dataset'] = dataset
-    # xception(dataset = dataset, config=config_cherry)
+    dataset = 'cherry'
+    config_cherry = configs['cherry_model']
+    config_cherry['dataset'] = dataset
+    config_cherry['classes'] = 88
+    config_cherry['period'] = 'cherry'
+    xception(dataset = dataset, config=config_cherry)
 
     '''
     # --TP+Xception Model --
@@ -654,7 +656,7 @@ if __name__ == "__main__":
     #
     # tp_xception('cherry', config_cherry, isVenation=True)
     #
-    tp_xception('soybean', config_soybean_R1, isVenation=True)
+    #tp_xception('soybean', config_soybean_R1, isVenation=True)
     #
     # tp_xception('soybean', config_soybean_R3, isVenation=True)
     #
