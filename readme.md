@@ -6,16 +6,16 @@
 > - The computation of Persistence Diagram (PD) require the python package ![HomCloud](https://www.wpi-aimr.tohoku.ac.jp/hiraoka_labo/homcloud/index.en.html])
     and ![Dipha](https://github.com/DIPHA/dipha).
 > - The code should work on the Linux operating system (The Ubuntu(>16.0.4 LTS) is recommend).
-    
+
 ##### The other required python packages 
 > - Python3
 > - Scikit-image, Scikit-learn
 > - Opencv
-> - Tensorflow 1.15, keras 2.1.0
+> - Tensorflow > 2.0 , keras > 2.1.0
 > - ...
- 
+
  The complete list of the required python packages and their version information can be found at _requirement.txt_
- 
+
 #### The configuration of Homcloud and Dipha 
 > we refer to the homepage of Homcloud https://www.wpi-aimr.tohoku.ac.jp/hiraoka_labo/homcloud/index.en.html for the configuration of Homcloud and Dipha.
 ### DockerFile
