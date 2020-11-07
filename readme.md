@@ -26,7 +26,7 @@ The dockerfile and homcloud package can be found in the dockerfile folder. We st
  1. Building the docker image
  > docker build -t mfcis:1.0 ./
  2. Creating the docker container. If you have built the docker image successfully, please create and start the docker container.
- > docker run -it --name mfcis -p 2202:22 -v your_local_code_path:/workspace --gpus all --shm-size="32g" mfcis:1.0
+ > docker run -it --name mfcis -p 2202:22 -v your_local_code_path:/workspace --gpus all --shm-size="32g" mfcis:1.0 /bin/bash
  - your_local_path is the real path of the code and dataset on your computer. Please ensure all the path are properly configured before running the code.
  3. The docker container create the root user as default, but the dipha should work under the common user, as a result you can create a new user account in the docker container and run the feature_extraction program on this account and train and test the model on the root account. It's a little difficult to configure the runing enviroment, so please contact us or raise an issue. we will reply you as soon as possible.
  ##### The dockerfile and configuration has been tested on a linux server with NVIDIA TESLA v100 and GTX1080TI.
