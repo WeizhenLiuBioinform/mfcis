@@ -23,6 +23,8 @@ sequence.extend(list(range(0, shape_views)))
 sequence.append(0)
 print(sequence)
 
+process_number = 20
+
 # 预定义形状PD各个方向结合的组合
 view_combination = []
 for i in range(1, len(sequence) - 1):
