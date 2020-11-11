@@ -144,7 +144,7 @@ def Combined_Model(parallels, config):
     x = BatchNormalization()(x)
     x = Dropout(0.5)(x)
     x = Dense(config['classes'], activation='softmax')(x)
-    fused_model = Model(input=inputs, outputs=x)
+    fused_model = Model(inputs=inputs, outputs=x)
     rmsprop = RMSprop(lr=0)
 
     if (parallels > 1):
