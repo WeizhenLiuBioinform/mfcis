@@ -145,7 +145,7 @@ def Combined_Model(parallels, config):
     x = Dropout(0.5)(x)
     x = Dense(config['classes'], activation='softmax')(x)
     fused_model = Model(inputs=inputs, outputs=x)
-    rmsprop = RMSprop(lr=0)
+    rmsprop = RMSprop(lr=0.001)
 
     if (parallels > 1):
         parallel_model = multi_gpu_model(fused_model, gpus=parallels)

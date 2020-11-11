@@ -128,6 +128,15 @@ def plot_result(result):
     plt.show()
 
 
+def lr_reducer(epoch, lr):
+    if epoch < 10:
+        lr = epoch / 5 * 0.001
+    if epoch == 10:
+        lr = 0.001
+    print("current lr is : {}".format(lr))
+    return lr
+
+
 def tp_xception(dataset, config, isVenation=False, period='N'):
     # config = configs[dataset + "_model"]
 
@@ -164,7 +173,7 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
     result = []
     lr_adjust = ReduceLROnPlateau(monitor='val_loss',
                                   factor=0.5,
-                                  patience=5,
+                                  patience=3,
                                   min_lr=1e-5)
     dataset = config['dataset']
     if dataset == 'soybean':
@@ -179,7 +188,7 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
                                                                         test_size=0.3,
                                                                         random_state=i,
                                                                         shuffle=True,
-                                                                        stratify=y)
+                                                                        stratify=y_one_hot)
         print(len(X_train_index))
         print(len(X_test_index))
         np.save('{}_iteration_{}_img_{}_tp_xception_train_index.npy'.format(dataset, i, period), X_train_index)
@@ -213,8 +222,6 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
             x_train_list.extend(vein_x_train_list)
         x_train_list.append(img_x_train)
 
-
-
         y_train_label = [np.argmax(d) for d in y_train]
 
         class_weights = class_weight.compute_class_weight('balanced', np.unique(y_train_label), y_train_label)
@@ -223,16 +230,6 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
                                            save_weights_only=True)
 
         model = BaseModel.Combined_Model(parallels=1, config=config)
-
-        def lr_reducer(epoch):
-            lr = K.get_value(model.optimizer.lr)
-            if epoch < 10:
-                lr = epoch / 5 * 0.001
-            if epoch == 10:
-                lr = 0.001
-            K.set_value(model.optimizer.lr, lr)
-            print("current lr is : {}".format(lr))
-            return lr
 
         lr_reduce = LearningRateScheduler(lr_reducer)
         model.fit(x_train_list, y_train, batch_size=16, epochs=100, validation_split=0.1, class_weight=class_weights,
@@ -270,7 +267,7 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
 
         K.clear_session()
 
-        model2 = BaseModel.Combined_Model(parallels=4, config=config)
+        model2 = BaseModel.Combined_Model(parallels=1, config=config)
         model2.load_weights('./{}_pdm_iteration-{}-{}.hdf5'.format(dataset, i, period))
         score = model2.evaluate(x_test_list, y_test, batch_size=128)
         print(score)
