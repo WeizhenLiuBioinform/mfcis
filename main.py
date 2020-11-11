@@ -236,9 +236,8 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
 
         lr_reduce = LearningRateScheduler(lr_reducer)
         model.fit(x_train_list, y_train, batch_size=16, epochs=100, validation_split=0.1, class_weight=class_weights,
-                  callbacks=[lr_reduce,
-                             ReduceLROnPlateau(monitor='val_loss', patience=3, min_lr=1e-6, factor=0.5),
-                             save_best_weight,
+                  callbacks=[save_best_weight,
+                             lr_reduce,
                              lr_adjust
                              ])
 
