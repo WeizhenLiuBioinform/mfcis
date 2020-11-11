@@ -72,7 +72,7 @@ def xception_model_training_and_test(img_x_list, y_list, config):
         model = BaseModel.Xception_Model(parallels=1, config=config)
         # you should set a smaller batch_size if you GPU memory is limited
 
-        model.fit(X_train, y_train, batch_size=40, epochs=200, validation_split=0.1, callbacks=[lr_adjust, save_best_weight])
+        model.fit(X_train, y_train, batch_size=32, epochs=200, validation_split=0.1, callbacks=[lr_adjust, save_best_weight])
         K.clear_session()
 
         model2 = BaseModel.Xception_Model(parallels=0, config=config)
