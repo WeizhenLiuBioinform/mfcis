@@ -16,7 +16,7 @@ from multiprocessing import Pool
 from skimage import io as skio
 import tensorflow as tf
 
-iteration = 1
+iteration = 10
 
 
 def xception(dataset, config, period=''):
@@ -45,7 +45,7 @@ def xception_model_training_and_test(img_x_list, y_list, config):
     lr_adjust = ReduceLROnPlateau(monitor='val_loss',
                                   factor=0.5,
                                   patience=5,
-                                  min_lr=1e-5)
+                                  min_lr=1e-6)
 
     result = []
     for i in range(iteration):
@@ -72,7 +72,7 @@ def xception_model_training_and_test(img_x_list, y_list, config):
         model = BaseModel.Xception_Model(parallels=1, config=config)
         # you should set a smaller batch_size if you GPU memory is limited
 
-        model.fit(X_train, y_train, batch_size=40, epochs=100, validation_split=0.1, callbacks=[lr_adjust, save_best_weight])
+        model.fit(X_train, y_train, batch_size=40, epochs=200, validation_split=0.1, callbacks=[lr_adjust, save_best_weight])
         K.clear_session()
 
         model2 = BaseModel.Xception_Model(parallels=0, config=config)
@@ -173,8 +173,8 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
     result = []
     lr_adjust = ReduceLROnPlateau(monitor='val_loss',
                                   factor=0.5,
-                                  patience=3,
-                                  min_lr=1e-5)
+                                  patience=5,
+                                  min_lr=1e-6)
     dataset = config['dataset']
     if dataset == 'soybean':
         period = config['period']
@@ -232,7 +232,7 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
         model = BaseModel.Combined_Model(parallels=1, config=config)
 
         lr_reduce = LearningRateScheduler(lr_reducer)
-        model.fit(x_train_list, y_train, batch_size=16, epochs=100, validation_split=0.1, class_weight=class_weights,
+        model.fit(x_train_list, y_train, batch_size=16, epochs=200, validation_split=0.1, class_weight=class_weights,
                   callbacks=[save_best_weight,
                              lr_reduce,
                              lr_adjust
