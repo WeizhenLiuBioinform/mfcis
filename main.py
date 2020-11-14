@@ -62,8 +62,8 @@ def xception_model_training_and_test(img_x_list, y_list, config):
         np.save('{}_iteration_{}_img_{}_xception_test_index.npy'.format(dataset, i, period), X_test_index)
         X_train = x[X_train_index]
         X_test = x[X_test_index]
-        y_train = y_one_hot[y_train_index]
-        y_test = y_one_hot[y_test_index]
+        y_train = y_one_hot[X_train_index]
+        y_test = y_one_hot[X_test_index]
 
         save_best_weight = ModelCheckpoint('xception_img_{}_itreation-{}-{}.hdf5'.format(dataset, i, period),
                                            monitor='val_loss', verbose=1, save_best_only=True, mode='auto',
@@ -81,7 +81,7 @@ def xception_model_training_and_test(img_x_list, y_list, config):
         score = model2.evaluate(X_test, y_test)
         print(score)
 
-        pre_final = model2.predict(X_test, batch_size=100)
+        pre_final = model2.predict(X_test, batch_size=128)
         y_test_label = np.array([np.argmax(d) for d in y_test])
         y_pre_label = np.array([np.argmax(d) for d in pre_final])
         performance = get_performance(y_pre_label, y_test_label)
@@ -643,7 +643,7 @@ if __name__ == "__main__":
     config_cherry = configs['cherry_model']
     config_cherry['dataset'] = dataset
     config_cherry['classes'] = 88
-    # xception(dataset=dataset, config=config_cherry)
+    xception(dataset=dataset, config=config_cherry)
 
     '''
     # --TP+Xception Model --
@@ -652,7 +652,7 @@ if __name__ == "__main__":
     #
     # tp_xception('flavia', config_flavia, isVenation=False)
     #
-    tp_xception('cherry', config_cherry, isVenation=True)
+    # tp_xception('cherry', config_cherry, isVenation=True)
     #
     # tp_xception('soybean', config_soybean_R1, isVenation=True)
     #
