@@ -30,8 +30,7 @@ scikit-learn==0.22.1
 scipy==1.4.1
 six==1.14.0
 some-package==0.1
-tensorboard==1.10.0
-tensorflow-gpu==1.10.0
+tensorflow-gpu==2.3.0
 termcolor==1.1.0
 threadpoolctl==2.0.0
 tifffile==2019.1.1
