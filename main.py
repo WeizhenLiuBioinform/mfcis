@@ -1,7 +1,7 @@
 from config.model_configuration import *
 from models import BaseModel
 from utils import utils
-# from feature_extraction import extract_features
+from feature_extraction import extract_features
 from keras.utils import to_categorical
 from keras import backend as K
 from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, LearningRateScheduler
