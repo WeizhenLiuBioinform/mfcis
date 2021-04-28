@@ -31,7 +31,7 @@ for i in range(1, len(sequence) - 1):
     view_combination.append(sequence[i - 1:i + 2])
 print(view_combination)
 
-
+# you should change the file path to match your own file location
 configs['soybean_model'] = {
     "texture_data_path": r'/home/zyp/MFCIS/dataset/soybean/soybean-dataset-texture-txt',
     "vein_data_path": r"/home/zyp/MFCIS/dataset/soybean/soybean-dataset-vein-txt",
@@ -79,7 +79,7 @@ configs['cherry_model'] = {
 
     "N": [int(d) for d in point_number_list],
     "image_size": (256, 256),
-    "regx_str": r'\S{1,}_d',
+    "regx_str": r'\S{1,}_\d',
     "max_val": 65535
 }
 

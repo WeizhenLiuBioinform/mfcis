@@ -43,68 +43,68 @@ def get_persistence(pd, N):
         return index
 
 
-def data_loader_for_combined_model_bat(file_list, dataset, config, isVenation):
-    list_size = len(file_list)
-    pool = Pool(process_number)
-    img_x = []
-    shape_x = []
-    texture_x = []
-    vein_x = []
-    y_x = []
-    delta = int(list_size / process_number) + 1
-    results = []
-    for i in range(process_number):
-        if (i+1) * delta > list_size:
-            task_list = file_list[i*delta:]
-        else:
-            task_list = file_list[i*delta: (i+1)*delta]
-        result_map = pool.apply_async(data_loader_for_combined_model, args=(task_list, dataset, config, isVenation))
-        results.append(result_map)
-
-    for res in results:
-        data = res.get()
-        img_x.append(data['img_x'])
-        shape_x.append(data['shape_x'])
-        texture_x.append(data['texture_x'])
-        y_x.append(data['y'])
-        if isVenation:
-            vein_x.append(data['vein_x'])
-
-    pool.close()
-    pool.join()
-    # img_x = np.load("cherry_img_x.npy", allow_pickle=True)
-    # shape_x = np.load("cherry_shape_x.npy", allow_pickle=True)
-    # texture_x = np.load("cherry_texture_x.npy", allow_pickle=True)
-    # vein_x = np.load("cherry_vein_x.npy", allow_pickle=True)
-    # y_x = np.load("cherry_y.npy", allow_pickle=True)
-    tmp_img_x = np.zeros([list_size, 256, 256, 3])
-    tmp_shape_x = np.zeros([list_size, 30, 700, 2, 3])
-    tmp_texture_x = np.zeros([list_size, 2, 1000, 2])
-    tmp_vein_x = np.zeros([list_size, 2, 1000, 2])
-    tmp_y = np.zeros([list_size, 1])
-    delta = int(list_size / process_number)+1
-    for i in range(process_number):
-        for j in range(len(img_x[i])):
-            start_index = i * delta
-            tmp_img_x[i*delta + j] = img_x[i][j]
-            tmp_shape_x[start_index+j] = shape_x[i][j]
-            tmp_texture_x[start_index+j] = texture_x[i][j]
-            tmp_vein_x[start_index+j] = vein_x[i][j]
-            tmp_y[start_index+j] = y_x[i][j]
-    # img_x = np.array(tmp_img_x)
-    # shape_x = np.array(tmp_shape_x)
-    # texture_x = np.array(tmp_texture_x)
-    # vein_x = np.array(tmp_vein_x)
-    # y_x = np.array(tmp_y)
-    img_x = tmp_img_x
-    shape_x = tmp_shape_x
-    texture_x = tmp_texture_x
-    vein_x = tmp_vein_x
-    y_x = tmp_y
-    if isVenation:
-        return img_x, shape_x, texture_x, vein_x, y_x
-    else:
-        return img_x, shape_x, texture_x, y_x
+# def data_loader_for_combined_model_bat(file_list, dataset, config, isVenation):
+#     list_size = len(file_list)
+#     pool = Pool(process_number)
+#     img_x = []
+#     shape_x = []
+#     texture_x = []
+#     vein_x = []
+#     y_x = []
+#     delta = int(list_size / process_number) + 1
+#     results = []
+#     for i in range(process_number):
+#         if (i+1) * delta > list_size:
+#             task_list = file_list[i*delta:]
+#         else:
+#             task_list = file_list[i*delta: (i+1)*delta]
+#         result_map = pool.apply_async(data_loader_for_combined_model, args=(task_list, dataset, config, isVenation))
+#         results.append(result_map)
+#
+#     for res in results:
+#         data = res.get()
+#         img_x.append(data['img_x'])
+#         shape_x.append(data['shape_x'])
+#         texture_x.append(data['texture_x'])
+#         y_x.append(data['y'])
+#         if isVenation:
+#             vein_x.append(data['vein_x'])
+#
+#     pool.close()
+#     pool.join()
+#     # img_x = np.load("cherry_img_x.npy", allow_pickle=True)
+#     # shape_x = np.load("cherry_shape_x.npy", allow_pickle=True)
+#     # texture_x = np.load("cherry_texture_x.npy", allow_pickle=True)
+#     # vein_x = np.load("cherry_vein_x.npy", allow_pickle=True)
+#     # y_x = np.load("cherry_y.npy", allow_pickle=True)
+#     tmp_img_x = np.zeros([list_size, 256, 256, 3])
+#     tmp_shape_x = np.zeros([list_size, 30, 700, 2, 3])
+#     tmp_texture_x = np.zeros([list_size, 2, 1000, 2])
+#     tmp_vein_x = np.zeros([list_size, 2, 1000, 2])
+#     tmp_y = np.zeros([list_size, 1])
+#     delta = int(list_size / process_number)+1
+#     for i in range(process_number):
+#         for j in range(len(img_x[i])):
+#             start_index = i * delta
+#             tmp_img_x[i*delta + j] = img_x[i][j]
+#             tmp_shape_x[start_index+j] = shape_x[i][j]
+#             tmp_texture_x[start_index+j] = texture_x[i][j]
+#             tmp_vein_x[start_index+j] = vein_x[i][j]
+#             tmp_y[start_index+j] = y_x[i][j]
+#     # img_x = np.array(tmp_img_x)
+#     # shape_x = np.array(tmp_shape_x)
+#     # texture_x = np.array(tmp_texture_x)
+#     # vein_x = np.array(tmp_vein_x)
+#     # y_x = np.array(tmp_y)
+#     img_x = tmp_img_x
+#     shape_x = tmp_shape_x
+#     texture_x = tmp_texture_x
+#     vein_x = tmp_vein_x
+#     y_x = tmp_y
+#     if isVenation:
+#         return img_x, shape_x, texture_x, vein_x, y_x
+#     else:
+#         return img_x, shape_x, texture_x, y_x
 
 
 def data_loader_for_combined_model(file_list, dataset, config, isVenation):
@@ -193,7 +193,7 @@ def data_loader_for_combined_model(file_list, dataset, config, isVenation):
 
             index4 = get_persistence(texture_pairs, texture_and_vein_point_num)
             vec_texture = texture_pairs[index4]
-            vec_texture = pht['texture'](vec_texture) / maxVal
+            vec_texture = pht['texture'](vec_texture)
             texture_multiview_x.append(vec_texture)
 
         if isVenation:
@@ -226,20 +226,20 @@ def data_loader_for_combined_model(file_list, dataset, config, isVenation):
         if isVenation:
             vein_x.append(vein_multiview_x)
 
-    result_map = dict()
-    result_map['img_x'] = img_x
-    result_map['shape_x'] = shape_x
-    result_map['texture_x'] = texture_x
-    if isVenation:
-        result_map['vein_x'] = vein_x
-    result_map['y'] = y
-
-    return result_map
-
+    # result_map = dict()
+    # result_map['img_x'] = img_x
+    # result_map['shape_x'] = shape_x
+    # result_map['texture_x'] = texture_x
     # if isVenation:
-    #     return img_x, shape_x, texture_x, vein_x, y
+    #     result_map['vein_x'] = vein_x
+    # result_map['y'] = y
     #
-    # return img_x, shape_x, texture_x, y
+    # return result_map
+
+    if isVenation:
+        return img_x, shape_x, texture_x, vein_x, y
+
+    return img_x, shape_x, texture_x, y
 
 
 def data_loader_for_xception_model(file_list, config):

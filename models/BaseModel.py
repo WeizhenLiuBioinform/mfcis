@@ -1,4 +1,3 @@
-import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.layers import Conv1D, Dropout, Dense, BatchNormalization, Input, Concatenate, MaxPooling2D, Reshape
 from tensorflow.keras.models import Model
@@ -10,7 +9,7 @@ from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.keras.applications.xception import Xception
 import os
 ## set the id of available gpu e.g. "0"
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 
 # PD Layer 定义，用于纹理和叶脉的PD

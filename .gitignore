@@ -1,2 +1,5 @@
 .idea/*
 datasets/*.zip
+./*.hdf5
+./*.json
+./*.npy

@@ -1,7 +1,7 @@
 from config.model_configuration import *
 from models import BaseModel
 from utils import utils
-from feature_extraction import extract_features
+# from feature_extraction import extract_features
 from keras.utils import to_categorical
 from keras import backend as K
 from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, LearningRateScheduler
@@ -12,14 +12,12 @@ from sklearn.utils import class_weight
 import re
 import json
 import os
-from multiprocessing import Pool
 from skimage import io as skio
-import tensorflow as tf
 
-iteration = 10
+iteration = 1
 
 
-def xception(dataset, config, period=''):
+def xception(config):
     # config = configs[dataset+"_model"]
     x_list, y_list = utils.get_dataset_file_list(config['img_path'])
     img_x_list, y_list = utils.data_loader_for_xception_model(file_list=x_list, config=config)
@@ -72,10 +70,10 @@ def xception_model_training_and_test(img_x_list, y_list, config):
         model = BaseModel.Xception_Model(parallels=1, config=config)
         # you should set a smaller batch_size if you GPU memory is limited
 
-        model.fit(X_train, y_train, batch_size=32, epochs=200, validation_split=0.1, callbacks=[lr_adjust, save_best_weight])
+        model.fit(X_train, y_train, batch_size=32, epochs=100, validation_split=0.1, callbacks=[lr_adjust, save_best_weight])
         K.clear_session()
 
-        model2 = BaseModel.Xception_Model(parallels=0, config=config)
+        model2 = BaseModel.Xception_Model(parallels=1, config=config)
         model2.load_weights('xception_img_{}_itreation-{}-{}.hdf5'.format(dataset, i, period))
 
         score = model2.evaluate(X_test, y_test)
@@ -121,7 +119,7 @@ def plot_result(result):
     plt.plot(recall, label='recall', marker='o')
     plt.plot(f1, label='f1_score', marker='x')
     plt.plot(acc, label='accuracy', marker='s')
-    plt.ylim([0.9, 1.2])
+    plt.ylim([0.0, 1.0])
     plt.xlabel('iteration')
     plt.ylabel('score')
     plt.legend()
@@ -143,16 +141,20 @@ def tp_xception(dataset, config, isVenation=False, period='N'):
     x_list, y_list = utils.get_dataset_file_list(config['img_path'])
     vein_x = []
     if isVenation:
-        img_x_list, shape_x, texture_x, vein_x, y_list = utils.data_loader_for_combined_model_bat(file_list=x_list,
+        img_x_list, shape_x, texture_x, vein_x, y_list = utils.data_loader_for_combined_model(file_list=x_list,
                                                                                                   dataset=dataset,
                                                                                                   config=config,
                                                                                                   isVenation=isVenation)
     else:
-        img_x_list, shape_x, texture_x, y_list = utils.data_loader_for_combined_model_bat(file_list=x_list,
+        img_x_list, shape_x, texture_x, y_list = utils.data_loader_for_combined_model(file_list=x_list,
                                                                                           dataset=dataset,
                                                                                           config=config,
                                                                                           isVenation=isVenation)
-
+    # img_x_list = np.load("cherry_img_x.npy")
+    # shape_x = np.load("cherry_shape_x.npy")
+    # texture_x = np.load("cherry_texture_x.npy")
+    # vein_x = np.load("cherry_vein_x.npy")
+    # y_list = np.load("cherry_y.npy")
     tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, isVenation, y_list, config)
 
 
@@ -223,8 +225,9 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
         x_train_list.append(img_x_train)
 
         y_train_label = [np.argmax(d) for d in y_train]
+        my_class_weights = list(class_weight.compute_class_weight('balanced', np.unique(y_train_label), y_train_label))
+        class_weight_dict = dict(zip([x for x in np.unique(y_train_label)], my_class_weights))
 
-        class_weights = class_weight.compute_class_weight('balanced', np.unique(y_train_label), y_train_label)
         save_best_weight = ModelCheckpoint('./{}_pdm_iteration-{}-{}.hdf5'.format(dataset, i, period),
                                            monitor='val_loss', verbose=1, save_best_only=True, mode='auto',
                                            save_weights_only=True)
@@ -232,7 +235,7 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
         model = BaseModel.Combined_Model(parallels=1, config=config)
 
         lr_reduce = LearningRateScheduler(lr_reducer)
-        model.fit(x_train_list, y_train, batch_size=16, epochs=200, validation_split=0.1, class_weight=class_weights,
+        model.fit(x_train_list, y_train, batch_size=16, epochs=100, validation_split=0.1, class_weight=class_weight_dict,
                   callbacks=[save_best_weight,
                              lr_reduce,
                              lr_adjust
@@ -248,6 +251,8 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
 
         if isVenation:
             vein_x_test = vein_x[X_test_index]
+            vein_x_test[:, 0, :, 1] = (vein_x_test[:, 0, :, 1] - np.mean(vein_x_train[:, 0, :, 1])) / np.std(vein_x_train[:, 0, :, 1])
+            vein_x_test[:, 1, :, 1] = (vein_x_test[:, 1, :, 1] - np.mean(vein_x_train[:, 1, :, 1])) / np.std(vein_x_train[:, 1, :, 1])
             vein_x_test_list = [vein_x_test[:, i, :, :] for i in range(config["vein_views"])]
 
         x_test_list = []
@@ -261,7 +266,7 @@ def tp_xception_model_training_and_test(img_x_list, shape_x, texture_x, vein_x, 
         if isVenation:
             for index, d in enumerate(vein_x_test_list):
                 vein_x_test_list[index] = np.reshape(d, [d.shape[0], d.shape[1], d.shape[2], 1])
-                x_test_list.extend(vein_x_test_list)
+            x_test_list.extend(vein_x_test_list)
 
         x_test_list.append(img_x_test)
 
@@ -332,6 +337,37 @@ def xception_multi_period_score_fusion(dataset, config):
     plot_result(result)
 
 
+def create_input_list(shape_x_train, texture_x_train, vein_x_train, img_x_train, config, isVenation=False):
+
+    shape_x_train_list = [shape_x_train[:, i, :, :] for i in range(config["shape_views"])]
+    texture_x_train_list = [texture_x_train[:, i, :, :] for i in range(config["texture_views"])]
+    vein_max = 1
+    if isVenation:
+        if os.path.exists("./{}_vein_max.npy".format(config['dataset'])):
+            vein_max = np.load("./{}_vein_max.npy".format(config['dataset']))
+        else:
+            vein_max = np.max(vein_x_train)
+            np.save("./{}_vein_max.npy".format(config['dataset']), vein_max)
+        vein_x_train = vein_x_train / vein_max
+        vein_x_train_list = [vein_x_train[:, i, :, :] for i in range(config["vein_views"])]
+
+    x_train_list = []
+
+    for index, d in enumerate(texture_x_train_list):
+        texture_x_train_list[index] = np.reshape(d, [d.shape[0], d.shape[1], d.shape[2], 1])
+
+    if isVenation:
+        for index, d in enumerate(vein_x_train_list):
+            vein_x_train_list[index] = np.reshape(d, [d.shape[0], d.shape[1], d.shape[2], 1])
+
+    x_train_list.extend(shape_x_train_list)
+    x_train_list.extend(texture_x_train_list)
+    if isVenation:
+        x_train_list.extend(vein_x_train_list)
+    x_train_list.append(img_x_train)
+    return x_train_list
+
+
 def tp_xception_multi_period_score_fusion(dataset, config):
     result = []
     for i in range(iteration):
@@ -340,9 +376,12 @@ def tp_xception_multi_period_score_fusion(dataset, config):
         for period in ['R1', 'R3', 'R4', 'R5', 'R6']:
             model = BaseModel.Combined_Model(parallels=4, config=config)
             model.load_weights('./{}_pdm_iteration-{}-{}.hdf5'.format(dataset, i, period))
-            file_list = np.loadtxt('{}-{}_file_list.txt'.format(dataset, period))
-            img_x_list, y_list = utils.data_loader_for_xception_model(file_list=file_list, config=config)
-            x = np.array(img_x_list)
+            x_list = np.loadtxt('{}-{}_file_list.txt'.format(dataset, period))
+            img_x_list, shape_x, texture_x, vein_x, y_list = utils.data_loader_for_combined_model(file_list=x_list,
+                                                                                                  dataset=dataset,
+                                                                                                  config=config,
+                                                                                                  isVenation=True)
+            img_x = np.array(img_x_list)
             y = np.array(y_list)
             id_map = np.loadtxt(dataset + '_id.txt')
             for index, d in enumerate(y):
@@ -351,11 +390,18 @@ def tp_xception_multi_period_score_fusion(dataset, config):
                         y[index] = label[1]
             y_one_hot = to_categorical(y)
             test_index = np.load('{}_iteration_{}_img_{}_tp_xception_test_index.npy'.format(dataset, i, period))
-            img_x_test = x[test_index]
+
+            img_x_test = img_x[test_index]
+            shape_x_test = shape_x[test_index]
+            texture_x_test = texture_x[test_index]
+            vein_x_test = vein_x[test_index]
             y_test = y_one_hot[test_index]
             y_test_list.append(y_test)
-            pre = model.predict(img_x_test)
+
+            x_test_list = create_input_list(shape_x_test, texture_x_test, vein_x_test, img_x_test, config, isVenation=True)
+            pre = model.predict(x_test_list)
             pre_list.append(pre)
+
         pre_final_arr = np.array(pre_list)
         pre_final = np.sum(pre_final_arr, axis=2)
         pre_final_label = [np.argmax(d) for d in pre_final]
@@ -442,16 +488,16 @@ def feature_extraction(dataset, period, config, isVenation=False):
     #     pool.apply_async(extract_feature_bat, args=(tmp_list))
 
 
-def extract_feature_bat(task_list):
-    for task in task_list:
-        img = skio.imread(task[0])
-        try:
-            extract_features.compute_pds(img, name=task[1], config=task[2], cultivar=task[3], period=task[4],
-                                         isVenation=task[5])
-        except Exception as e:
-            print(e)
-            continue
-            print(task)
+# def extract_feature_bat(task_list):
+#     for task in task_list:
+#         img = skio.imread(task[0])
+#         try:
+#             extract_features.compute_pds(img, name=task[1], config=task[2], cultivar=task[3], period=task[4],
+#                                          isVenation=task[5])
+#         except Exception as e:
+#             print(e)
+#             print(task)
+#             continue
 
 
 if __name__ == "__main__":
@@ -560,7 +606,7 @@ if __name__ == "__main__":
 
     '''
     # -- Xception Model --
-    # evaluate the xception model on swedish dataset
+    # evaluate the xception model on swedish and flavia dataset 
     '''
     # dataset = 'swedish'
     # config_swedish = configs['swedish_model']
@@ -586,7 +632,7 @@ if __name__ == "__main__":
     # config_soybean_R1['shape_data_path'] = os.path.join(config_soybean_R1['shape_data_path'])
     # config_soybean_R1['texture_data_path'] = os.path.join(config_soybean_R1['texture_data_path'])
     # config_soybean_R1['vein_data_path'] = os.path.join(config_soybean_R1['vein_data_path'])
-    # xception(dataset='soybean', config=config_soybean_R1, period='R1')
+    # xception(config=config_soybean_R1)
 
     # R3 period
     # dataset = 'soybean'
@@ -598,7 +644,7 @@ if __name__ == "__main__":
     # config_soybean_R3['shape_data_path'] = os.path.join(config_soybean_R3['shape_data_path'])
     # config_soybean_R3['texture_data_path'] = os.path.join(config_soybean_R3['texture_data_path'])
     # config_soybean_R3['vein_data_path'] = os.path.join(config_soybean_R3['vein_data_path'])
-    # xception(dataset='soybean', config=config_soybean_R3, period='R3')
+    # xception(config=config_soybean_R3)
 
     # R4 period
     # dataset = 'soybean'
@@ -610,7 +656,7 @@ if __name__ == "__main__":
     # config_soybean_R4['shape_data_path'] = os.path.join(config_soybean_R4['shape_data_path'])
     # config_soybean_R4['texture_data_path'] = os.path.join(config_soybean_R4['texture_data_path'])
     # config_soybean_R4['vein_data_path'] = os.path.join(config_soybean_R4['vein_data_path'])
-    # xception(dataset='soybean', config=config_soybean_R4, period='R4')
+    # xception(config=config_soybean_R4)
 
     # R5 period
     # dataset = 'soybean'
@@ -622,7 +668,7 @@ if __name__ == "__main__":
     # config_soybean_R5['shape_data_path'] = os.path.join(config_soybean_R5['shape_data_path'])
     # config_soybean_R5['texture_data_path'] = os.path.join(config_soybean_R5['texture_data_path'])
     # config_soybean_R5['vein_data_path'] = os.path.join(config_soybean_R5['vein_data_path'])
-    # xception(dataset='soybean', config=config_soybean_R5, period='R5')
+    # xception(config=config_soybean_R5)
 
     # R6 period
     # dataset = 'soybean'
@@ -634,7 +680,7 @@ if __name__ == "__main__":
     # config_soybean_R6['shape_data_path'] = os.path.join(config_soybean_R6['shape_data_path'])
     # config_soybean_R6['texture_data_path'] = os.path.join(config_soybean_R6['texture_data_path'])
     # config_soybean_R6['vein_data_path'] = os.path.join(config_soybean_R6['vein_data_path'])
-    # xception(dataset='soybean', config=config_soybean_R6, period='R6')
+    # xception(config=config_soybean_R6)
 
     '''
     #evaluate the xception model on cherry dataset
@@ -643,7 +689,7 @@ if __name__ == "__main__":
     config_cherry = configs['cherry_model']
     config_cherry['dataset'] = dataset
     config_cherry['classes'] = 88
-    xception(dataset=dataset, config=config_cherry)
+    # xception(config=config_cherry)
 
     '''
     # --TP+Xception Model --
@@ -652,7 +698,7 @@ if __name__ == "__main__":
     #
     # tp_xception('flavia', config_flavia, isVenation=False)
     #
-    # tp_xception('cherry', config_cherry, isVenation=True)
+    tp_xception('cherry', config_cherry, isVenation=True)
     #
     # tp_xception('soybean', config_soybean_R1, isVenation=True)
     #
