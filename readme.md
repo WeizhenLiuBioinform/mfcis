@@ -1,9 +1,11 @@
 ## The Source Code of MFCIS
+Clicking the follow image to access the website.
+![MFCIS online platform](https://github.com/WeizhenLiuBioinform/mfcis/banner.png)
 ---
 ##### If you have any problem, please contact us!
 ### ** If the CUDA installation process failed. Please remove the installation commands of cuda and enter the docker container and install the CUDA manually. Please make sure tensorflow and CUDA versions are compatible.
 ### Environment requirement
-> - The computation of Persistence Diagram (PD) require the python package ![HomCloud](https://www.wpi-aimr.tohoku.ac.jp/hiraoka_labo/homcloud/index.en.html])
+> - The computation of Persistence Diagram (PD) require the python package ![HomCloud](https://homcloud.dev/])
     and ![Dipha](https://github.com/DIPHA/dipha).
 > - The code should work on the Linux operating system (The Ubuntu(>16.0.4 LTS) is recommend).
 
