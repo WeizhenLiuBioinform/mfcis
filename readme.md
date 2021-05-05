@@ -7,8 +7,8 @@ Clicking [Here](http://mfcis.online/) to access the online cultivar recognition 
 ##### If you have any problem, please contact us!
 ### ** If the CUDA installation process failed. Please remove the installation commands of cuda and enter the docker container and install the CUDA manually. Please make sure tensorflow and CUDA versions are compatible.
 ### Environment requirement
-> - The computation of Persistence Diagram (PD) require the python package ![HomCloud](https://homcloud.dev)
-    and ![Dipha](https://github.com/DIPHA/dipha).
+> - The computation of Persistence Diagram (PD) require the python package [HomCloud](https://homcloud.dev)
+    and [Dipha](https://github.com/DIPHA/dipha).
 > - The code should work on the Linux operating system (The Ubuntu(>16.0.4 LTS) is recommend).
 
 ##### The other required python packages 
@@ -21,7 +21,7 @@ Clicking [Here](http://mfcis.online/) to access the online cultivar recognition 
  The complete list of the required python packages and their version information can be found at _requirement.txt_
 
 #### The configuration of Homcloud and Dipha 
-> we refer to the homepage of Homcloud https://www.wpi-aimr.tohoku.ac.jp/hiraoka_labo/homcloud/index.en.html for the configuration of Homcloud and Dipha.
+> we refer to the homepage of Homcloud https://homcloud.dev/ for the configuration of Homcloud and Dipha.
 ### DockerFile
 It's so cumbersome to do the configuration from scratch, so we provided a dockerfile, you can run the program in the docker container.
 The dockerfile and homcloud package can be found in the dockerfile folder. We strongly recommend you adopt this way. The dipha provided was compiled on Debian system. If you want to change the base image, the dipha should be Recompiled.
