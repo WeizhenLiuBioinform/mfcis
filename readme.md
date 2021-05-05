@@ -7,7 +7,7 @@ Clicking [Here](http://mfcis.online/) to access the online cultivar recognition 
 ##### If you have any problem, please contact us!
 ### ** If the CUDA installation process failed. Please remove the installation commands of cuda and enter the docker container and install the CUDA manually. Please make sure tensorflow and CUDA versions are compatible.
 ### Environment requirement
-> - The computation of Persistence Diagram (PD) require the python package ![HomCloud](https://homcloud.dev/])
+> - The computation of Persistence Diagram (PD) require the python package ![HomCloud](https://homcloud.dev)
     and ![Dipha](https://github.com/DIPHA/dipha).
 > - The code should work on the Linux operating system (The Ubuntu(>16.0.4 LTS) is recommend).
 
