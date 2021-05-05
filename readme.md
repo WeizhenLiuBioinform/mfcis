@@ -2,7 +2,7 @@
 
 Clicking [Here](http://mfcis.online/) to access the online cultivar recognition platform.
 
-![MFCIS online platform](https://github.com/WeizhenLiuBioinform/mfcis/blob/master/banner.PNG)
+![MFCIS online platform](http://mfcis.online/static/images/logo.png)
 ---
 ##### If you have any problem, please contact us!
 ### ** If the CUDA installation process failed. Please remove the installation commands of cuda and enter the docker container and install the CUDA manually. Please make sure tensorflow and CUDA versions are compatible.
