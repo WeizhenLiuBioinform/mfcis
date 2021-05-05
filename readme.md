@@ -1,6 +1,7 @@
 ## The Source Code of MFCIS 
 
-Clicking the follow image to access the online cultivar recognition platform.
+Clicking the follow link to access the online cultivar recognition platform.
+[MFCIS online platform](http://mfcis.online/)
 
 ![MFCIS online platform](https://github.com/WeizhenLiuBioinform/mfcis/blob/master/banner.PNG)
 ---
